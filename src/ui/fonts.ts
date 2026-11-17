@@ -1,10 +1,14 @@
-import { Barlow_400Regular, Barlow_500Medium, Barlow_600SemiBold } from '@expo-google-fonts/barlow';
-import { BarlowCondensed_600SemiBold } from '@expo-google-fonts/barlow-condensed';
+import {
+  BeVietnamPro_400Regular,
+  BeVietnamPro_500Medium,
+  BeVietnamPro_600SemiBold,
+  BeVietnamPro_700Bold,
+} from '@expo-google-fonts/be-vietnam-pro';
 import { fontFamilies } from './theme';
 
 export const fontAssets = {
-  [fontFamilies.regular]: Barlow_400Regular,
-  [fontFamilies.medium]: Barlow_500Medium,
-  [fontFamilies.semibold]: Barlow_600SemiBold,
-  [fontFamilies.condensed]: BarlowCondensed_600SemiBold,
+  [fontFamilies.regular]: BeVietnamPro_400Regular,
+  [fontFamilies.medium]: BeVietnamPro_500Medium,
+  [fontFamilies.semibold]: BeVietnamPro_600SemiBold,
+  [fontFamilies.bold]: BeVietnamPro_700Bold,
 };

@@ -6,7 +6,7 @@ type Props = TextProps & { variant?: TypographyVariant; muted?: boolean };
 
 export function Text({ variant = 'body', muted = false, style, ...rest }: Props) {
   const { colors } = useTheme();
-  const large = variant === 'sign' || variant === 'title';
+  const large = variant === 'display' || variant === 'title' || variant === 'sign';
   return (
     <RNText
       maxFontSizeMultiplier={large ? 1.2 : 1.6}
