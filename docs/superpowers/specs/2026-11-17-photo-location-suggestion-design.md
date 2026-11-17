@@ -41,7 +41,7 @@ Thông báo và mọi nơi khác dùng ghi chú **không đổi**: gợi ý ch�
 ## Kiến trúc
 
 - `src/domain/locationSuggestion.ts` (thuần, có test): `suggestLocationNote(lines: string[]): string | null`.
-- `src/native/textRecognition.ts` (adapter native, không test bằng Jest): `recognizeTextLines(photoUri: string): Promise<string[]>`, không bao giờ reject (lỗi hay quá 5 giây thì trả mảng rỗng). Dùng thư viện OCR trên máy (Apple Vision trên iOS, Google ML Kit trên Android).
+- `src/native/textRecognition.ts` (adapter native, không test bằng Jest): `recognizeTextLines(photoUri: string): Promise<string[]>`, không bao giờ reject (lỗi hay quá 5 giây thì trả mảng rỗng). Dùng thư viện OCR trên máy (Apple Vision trên iOS, Google ML Kit trên Android). Trước khi đọc, ảnh được chuẩn hoá bằng `expo-image-manipulator` thành một tệp tạm đúng chiều (áp dụng EXIF orientation vào điểm ảnh, vì thư viện OCR trên iOS bỏ qua EXIF), cạnh dài nhất tối đa 1600 px, JPEG chất lượng 0,9; nếu chuẩn hoá lỗi thì dùng ảnh gốc, và tệp tạm luôn bị xoá sau khi đọc (ảnh gốc không bao giờ bị sửa hay xoá).
 - `src/native/photoSuggestion.ts`: `suggestNoteFromPhoto(photoUri: string): Promise<string | null>` = OCR rồi quy tắc nhận ra vị trí. Đây là **đường nối duy nhất** màn hình Chụp dùng; sau này một nhà cung cấp AI tuỳ chọn có thể đứng sau cùng hàm này mà không đổi màn hình.
 - `src/app/capture.tsx`: gọi `suggestNoteFromPhoto` khi có ảnh, quản lý trạng thái "đang đọc / đã gợi ý", cờ "người dùng đã gõ", và mã yêu cầu để bỏ qua kết quả của ảnh cũ. Không đổi logic chụp, lưu, quyền hay thông báo.
 
