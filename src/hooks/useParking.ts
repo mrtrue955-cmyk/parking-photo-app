@@ -7,6 +7,7 @@ import { syncReminders } from '../native/reminders';
 
 export function useParking() {
   const [records, setRecords] = useState<ParkingRecord[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   const latestRequest = useRef(0);
 
@@ -17,9 +18,13 @@ export function useParking() {
       const service = await getParkingService();
       await service.purgeExpired();
       list = await service.list();
-      if (requestId === latestRequest.current) setRecords(list);
+      if (requestId === latestRequest.current) {
+        setRecords(list);
+        setLoaded(true);
+      }
     } catch (error) {
       console.warn('Failed to refresh parking records', error);
+      if (requestId === latestRequest.current) setLoaded(true);
       return;
     }
     if (requestId !== latestRequest.current) return;
@@ -43,5 +48,5 @@ export function useParking() {
     return () => subscription.remove();
   }, [refresh]);
 
-  return { records, refresh };
+  return { records, loaded, refresh };
 }

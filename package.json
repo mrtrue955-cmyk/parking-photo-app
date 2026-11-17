@@ -1,7 +1,7 @@
 {
   "name": "parking-photo-app",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "index.ts",
   "dependencies": {
     "@expo/ui": "~58.0.28",
     "expo": "~58.0.25",

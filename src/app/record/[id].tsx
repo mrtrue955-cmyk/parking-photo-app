@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Button, Linking, ScrollView, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Alert, Button, Linking, ScrollView, StyleSheet, Text } from 'react-native';
 import { getParkingService, getPhotoFiles } from '../../container';
 import { daysLeft } from '../../domain/expiry';
 import { useParking } from '../../hooks/useParking';
@@ -11,10 +11,11 @@ import { GalleryPermissionDeniedError } from '../../services/ports';
 export default function RecordDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { records, refresh } = useParking();
+  const { records, loaded, refresh } = useParking();
   const [busy, setBusy] = useState(false);
   const record = records.find((r) => r.id === id);
 
+  if (!loaded) return <ActivityIndicator style={styles.loading} />;
   if (!record) return <Text style={styles.message}>Ảnh không còn tồn tại.</Text>;
 
   const recordId = record.id;
@@ -98,5 +99,6 @@ const styles = StyleSheet.create({
   photo: { width: '100%', height: 360, borderRadius: 8 },
   note: { fontSize: 18, fontWeight: '600' },
   meta: { color: '#666' },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   message: { padding: 24, textAlign: 'center' },
 });
