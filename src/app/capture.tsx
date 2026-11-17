@@ -51,7 +51,17 @@ export default function CaptureScreen() {
       Alert.alert(
         'Nhắc trước khi xoá',
         'Cho phép thông báo để app nhắc bạn trước khi ảnh bị xoá.',
-        [{ text: 'Tiếp tục', onPress: () => ensureNotificationPermission().then(() => resolve()) }],
+        [
+          {
+            text: 'Tiếp tục',
+            onPress: () => {
+              ensureNotificationPermission()
+                .catch(() => undefined)
+                .finally(() => resolve());
+            },
+          },
+        ],
+        { cancelable: true, onDismiss: () => resolve() },
       );
     });
   }
@@ -59,18 +69,24 @@ export default function CaptureScreen() {
   async function save() {
     if (!photoUri) return;
     setBusy(true);
+    let saved = false;
     try {
-      const service = await getParkingService();
-      await service.capture({
-        tempUri: photoUri,
-        lat: coords?.lat ?? null,
-        lng: coords?.lng ?? null,
-        note,
-      });
-      await askNotificationOnce();
-      router.back();
-    } catch {
-      Alert.alert('Không lưu được ảnh', 'Vui lòng thử lại.');
+      try {
+        const service = await getParkingService();
+        await service.capture({
+          tempUri: photoUri,
+          lat: coords?.lat ?? null,
+          lng: coords?.lng ?? null,
+          note,
+        });
+        saved = true;
+      } catch {
+        Alert.alert('Không lưu được ảnh', 'Vui lòng thử lại.');
+      }
+      if (saved) {
+        await askNotificationOnce().catch(() => undefined);
+        router.back();
+      }
     } finally {
       setBusy(false);
     }
