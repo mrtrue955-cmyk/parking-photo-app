@@ -71,6 +71,7 @@ export default function Home() {
     <FlatList
       data={history}
       keyExtractor={(item) => item.id}
+      contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.list}
       ListHeaderComponent={
         <View>

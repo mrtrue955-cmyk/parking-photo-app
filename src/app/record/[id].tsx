@@ -64,7 +64,7 @@ export default function RecordDetail() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.container}>
       <Image source={{ uri }} style={styles.photo} contentFit="contain" />
       {record.note ? <Text style={styles.note}>{record.note}</Text> : null}
       <Text style={styles.meta}>Chụp lúc {new Date(record.createdAt).toLocaleString('vi-VN')}</Text>
