@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { daysLeft, expiryFraction, isExpiringSoon, RETENTION_DAYS } from '../../domain/expiry';
+import { daysLeft, expiryFraction, isExpiringSoon } from '../../domain/expiry';
 import { useTheme } from '../useTheme';
 import { Text } from './Text';
 
@@ -24,8 +24,8 @@ export function ExpiryBar({ expiresAt, now }: { expiresAt: number | null; now: n
     <View
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel={label}
-      accessibilityValue={{ min: 0, max: RETENTION_DAYS, now: days }}
+      accessibilityLabel="Hạn xoá"
+      accessibilityValue={{ text: label }}
       style={styles.row}
     >
       <View style={[styles.track, { backgroundColor: colors.border }]}>

@@ -1,6 +1,7 @@
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { registerPurgeTask } from '../background/purgeTask';
 import { fontAssets } from '../ui/fonts';
@@ -25,18 +26,21 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerShadowVisible: false,
-        headerTintColor: colors.primary,
-        headerTitleStyle: { color: colors.text, fontFamily: fontFamilies.condensed, fontSize: 24 },
-        contentStyle: { backgroundColor: colors.background },
-      }}
-    >
-      <Stack.Screen name="index" options={{ title: 'Xe của tôi' }} />
-      <Stack.Screen name="capture" options={{ title: 'Chụp vị trí xe' }} />
-      <Stack.Screen name="record/[id]" options={{ title: 'Chi tiết' }} />
-    </Stack>
+    <>
+      <StatusBar style="auto" />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.background },
+          headerShadowVisible: false,
+          headerTintColor: colors.primary,
+          headerTitleStyle: { color: colors.text, fontFamily: fontFamilies.condensed, fontSize: 24 },
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
+        <Stack.Screen name="index" options={{ title: 'Xe của tôi' }} />
+        <Stack.Screen name="capture" options={{ title: 'Chụp vị trí xe' }} />
+        <Stack.Screen name="record/[id]" options={{ title: 'Chi tiết' }} />
+      </Stack>
+    </>
   );
 }

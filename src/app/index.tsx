@@ -93,7 +93,7 @@ export default function Home() {
           onPress={() => openRecord(item.id)}
         />
       )}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      ItemSeparatorComponent={ItemSeparator}
     />
   );
 }
@@ -108,3 +108,7 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center' },
   separator: { height: spacing.sm },
 });
+
+function ItemSeparator() {
+  return <View style={styles.separator} />;
+}
