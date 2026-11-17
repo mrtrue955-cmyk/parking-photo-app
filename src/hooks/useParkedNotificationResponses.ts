@@ -4,6 +4,7 @@ import { Linking } from 'react-native';
 import { getParkingService } from '../container';
 import { pickCurrent } from '../domain/current';
 import { parseParkedAction, PARKED_NOTIFICATION_ID } from '../domain/parkedNotification';
+import { emitParkingChanged } from './parkingEvents';
 import { directionsUrl } from '../native/directions';
 import { dismissParkedNotification } from '../native/parkedNotification';
 
@@ -15,6 +16,7 @@ async function handleParkedResponse(actionIdentifier: string, data: unknown): Pr
     // Only collect the spot this notification was posted for; always dismiss.
     if (current && current.id === action.recordId) await service.collectCurrent();
     await dismissParkedNotification();
+    emitParkingChanged();
   } else if (action.type === 'navigate') {
     await Linking.openURL(directionsUrl(action.lat, action.lng));
   }

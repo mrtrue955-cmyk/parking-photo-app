@@ -4,6 +4,7 @@ import { AppState } from 'react-native';
 import { getParkingService } from '../container';
 import { pickCurrent } from '../domain/current';
 import type { ParkingRecord } from '../domain/types';
+import { onParkingChanged } from './parkingEvents';
 import { dismissParkedNotification } from '../native/parkedNotification';
 import { syncReminders } from '../native/reminders';
 
@@ -54,6 +55,14 @@ export function useParking() {
     });
     return () => subscription.remove();
   }, [refresh]);
+
+  useEffect(
+    () =>
+      onParkingChanged(() => {
+        refresh();
+      }),
+    [refresh],
+  );
 
   return { records, loaded, now, refresh };
 }
