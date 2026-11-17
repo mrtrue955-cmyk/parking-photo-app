@@ -34,8 +34,9 @@ export function createParkingService({ repo, files, gallery, now, newId }: Deps)
         collectedAt: null,
         expiresAt: computeExpiresAt(createdAt),
       };
-      const previouslyOpen = (await repo.list()).filter((r) => r.collectedAt === null);
+      let previouslyOpen: ParkingRecord[];
       try {
+        previouslyOpen = (await repo.list()).filter((r) => r.collectedAt === null);
         await repo.insert(record);
       } catch (error) {
         await files.remove(photoPath);
@@ -70,11 +71,15 @@ export function createParkingService({ repo, files, gallery, now, newId }: Deps)
       const t = now();
       let removed = 0;
       for (const r of await repo.list()) {
-        const missing = !(await files.exists(r.photoPath));
-        if (isExpired(r, t) || missing) {
-          await files.remove(r.photoPath);
-          await repo.remove(r.id);
-          removed += 1;
+        try {
+          const missing = !(await files.exists(r.photoPath));
+          if (isExpired(r, t) || missing) {
+            await files.remove(r.photoPath);
+            await repo.remove(r.id);
+            removed += 1;
+          }
+        } catch {
+          // Skip this record so one failure does not abort the run; it is retried on the next purge.
         }
       }
       return removed;

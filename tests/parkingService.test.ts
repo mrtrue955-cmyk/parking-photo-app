@@ -51,6 +51,16 @@ test('capture removes the saved file and leaves the old spot open when insert fa
   expect((await repo.get(first.id))!.collectedAt).toBeNull();
 });
 
+test('capture removes the saved file and throws when listing records fails', async () => {
+  // Given a database that cannot list records
+  const { service, repo, files } = setup();
+  repo.failList = true;
+  // When capturing a spot
+  // Then it throws and the saved photo is cleaned up, so no file is orphaned
+  await expect(service.capture(shot)).rejects.toThrow('list failed');
+  expect(files.names.size).toBe(0);
+});
+
 test('collectCurrent marks the current spot collected but keeps its expiry', async () => {
   // Given one open spot
   const { service, repo, setNow } = setup(1_000);
@@ -87,6 +97,22 @@ test('purgeExpired deletes expired records and their files, keeps the rest', asy
   expect(await files.exists(old.photoPath)).toBe(false);
   expect(await repo.get(fresh.id)).not.toBeNull();
   expect(await files.exists(fresh.photoPath)).toBe(true);
+});
+
+test('purgeExpired still removes other expired records when one removal throws', async () => {
+  // Given two expired records, where removing the first one fails
+  const { service, repo, files, setNow } = setup(0);
+  const failing = await service.capture(shot);
+  const other = await service.capture(shot);
+  repo.failRemoveIds.add(failing.id);
+  // When purging 31 days later
+  setNow(31 * DAY_MS);
+  const removed = await service.purgeExpired();
+  // Then the failing record is kept for a later run, the other is removed, and only the success is counted
+  expect(removed).toBe(1);
+  expect(await repo.get(failing.id)).not.toBeNull();
+  expect(await repo.get(other.id)).toBeNull();
+  expect(await files.exists(other.photoPath)).toBe(false);
 });
 
 test('purgeExpired drops records whose file is missing', async () => {
