@@ -4,8 +4,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { registerPurgeTask } from '../background/purgeTask';
+import { ScreenHeader } from '../ui/components/ScreenHeader';
 import { fontAssets } from '../ui/fonts';
-import { fontFamilies } from '../ui/theme';
 import { useTheme } from '../ui/useTheme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -30,16 +30,19 @@ export default function RootLayout() {
       <StatusBar style="auto" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: colors.background },
-          headerShadowVisible: false,
-          headerTintColor: colors.primary,
-          headerTitleStyle: { color: colors.text, fontFamily: fontFamilies.condensed, fontSize: 24 },
+          headerShown: false,
           contentStyle: { backgroundColor: colors.background },
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'Xe của tôi' }} />
-        <Stack.Screen name="capture" options={{ title: 'Chụp vị trí xe' }} />
-        <Stack.Screen name="record/[id]" options={{ title: 'Chi tiết' }} />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="capture"
+          options={{ headerShown: true, header: () => <ScreenHeader title="Chụp vị trí xe" /> }}
+        />
+        <Stack.Screen
+          name="record/[id]"
+          options={{ headerShown: true, header: () => <ScreenHeader title="Chi tiết" /> }}
+        />
       </Stack>
     </>
   );
