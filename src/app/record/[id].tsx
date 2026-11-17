@@ -5,9 +5,11 @@ import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService, getPhotoFiles } from '../../container';
 import { useParking } from '../../hooks/useParking';
+import { historyStatus } from '../../domain/history';
 import { directionsUrl } from '../../native/directions';
 import { GalleryPermissionDeniedError } from '../../services/ports';
-import { PrimaryButton, TextButton } from '../../ui/components/Button';
+import { PrimaryButton, SecondaryButton, TextButton } from '../../ui/components/Button';
+import { Chip } from '../../ui/components/Chip';
 import { ExpiryBar } from '../../ui/components/ExpiryBar';
 import { Text } from '../../ui/components/Text';
 import { radius, spacing } from '../../ui/theme';
@@ -23,7 +25,11 @@ export default function RecordDetail() {
   const record = records.find((r) => r.id === id);
 
   if (!loaded) {
-    return <ActivityIndicator style={styles.loading} color={colors.primary} />;
+    return (
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
   }
   if (!record) {
     return (
@@ -79,40 +85,44 @@ export default function RecordDetail() {
     ]);
   }
 
+  const status = historyStatus(record.expiresAt, now);
+
   return (
     <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={[styles.container, { paddingBottom: spacing.xl + insets.bottom }]}
     >
       <Image source={{ uri }} style={styles.photo} contentFit="cover" accessible accessibilityLabel="Ảnh vị trí xe" />
+      <Chip label={status.label} tone={status.tone} />
       {record.note ? (
-        <Text variant="sign" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>
+        <Text variant="display" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>
           {record.note}
         </Text>
       ) : (
         <Text muted>Không có ghi chú</Text>
       )}
-      <Text variant="caption" muted>
-        Chụp lúc {new Date(record.createdAt).toLocaleString('vi-VN')}
-      </Text>
-      <ExpiryBar expiresAt={record.expiresAt} now={now} />
-      {record.lat !== null && record.lng !== null ? (
-        <View style={styles.block}>
+      <View style={[styles.info, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Text variant="caption" muted>
+          Chụp lúc {new Date(record.createdAt).toLocaleString('vi-VN')}
+        </Text>
+        <ExpiryBar expiresAt={record.expiresAt} now={now} />
+        {record.lat !== null && record.lng !== null ? (
           <Text variant="caption" muted>
             Toạ độ: {record.lat.toFixed(5)}, {record.lng.toFixed(5)}
           </Text>
-          <TextButton
-            title="Mở bản đồ"
-            onPress={() =>
-              Linking.openURL(directionsUrl(record.lat!, record.lng!)).catch(() =>
-                Alert.alert('Không mở được bản đồ', 'Hãy cài ứng dụng bản đồ rồi thử lại.'),
-              )
-            }
-          />
-        </View>
-      ) : null}
+        ) : null}
+      </View>
       {record.expiresAt !== null ? <PrimaryButton title="Giữ lại" onPress={keep} disabled={busy} /> : null}
+      {record.lat !== null && record.lng !== null ? (
+        <SecondaryButton
+          title="Mở bản đồ"
+          onPress={() =>
+            Linking.openURL(directionsUrl(record.lat!, record.lng!)).catch(() =>
+              Alert.alert('Không mở được bản đồ', 'Hãy cài ứng dụng bản đồ rồi thử lại.'),
+            )
+          }
+        />
+      ) : null}
       <View style={styles.dangerZone}>
         <TextButton title="Xoá ngay" tone="danger" onPress={confirmDelete} disabled={busy} />
       </View>
@@ -121,9 +131,14 @@ export default function RecordDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: spacing.screen, gap: spacing.md, paddingBottom: spacing.xl },
-  photo: { width: '100%', height: 320, borderRadius: radius.card },
-  block: { gap: spacing.xs },
+  container: { padding: spacing.screen, gap: spacing.md },
+  photo: { width: '100%', height: 300, borderRadius: radius.card },
+  info: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
   dangerZone: { marginTop: spacing.xl, alignItems: 'center' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });
