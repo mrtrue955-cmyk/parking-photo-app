@@ -40,9 +40,9 @@ used here.
 ## Project layout
 
 ```
-src/app/         expo-router screens: (tabs) group (Home, History, Capture) and Record detail
+src/app/         expo-router screens: the (tabs) group holds Home and History; Capture and Record detail are Stack routes outside the tabs
 src/ui/          theme, shared components (Text, tab bar, cards), fonts
-src/domain/      pure logic: expiry, current spot, reminders
+src/domain/      pure logic: expiry, current spot, history filter, reminders
 src/services/    parking service and its ports (repository, files, gallery)
 src/native/      adapters for SQLite, file system, gallery, GPS, notifications
 src/background/  background purge task
@@ -51,4 +51,4 @@ tests/           Jest tests (the service is tested against in-memory fakes)
 docs/superpowers design spec and implementation plan
 ```
 
-Design: `docs/superpowers/specs/2026-11-17-parking-photo-app-design.md`.
+Design: `docs/superpowers/specs/2026-11-17-ui-redesign-v2-design.md` (current). The earlier `2026-11-17-parking-photo-app-design.md` and `2026-11-17-ui-redesign-design.md` specs are superseded.

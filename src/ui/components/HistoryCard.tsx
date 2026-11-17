@@ -18,7 +18,7 @@ export function HistoryCard({ record, photoUri, now, onPress }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title}, ${status.label}`}
+      accessibilityLabel={`${title}, ${status.label}, đậu ${formatTimeAgo(record.createdAt, now)}`}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,

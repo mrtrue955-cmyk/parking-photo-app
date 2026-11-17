@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', padding: 4, borderRadius: radius.pill },
   item: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 48,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
