@@ -10,6 +10,8 @@ import { useTheme } from '../ui/useTheme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+export const unstable_settings = { anchor: '(tabs)' };
+
 export default function RootLayout() {
   const { colors } = useTheme();
   const [fontsLoaded, fontError] = useFonts(fontAssets);
