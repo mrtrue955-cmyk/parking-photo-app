@@ -2,6 +2,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Image } from 'expo-image';
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
+import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -27,6 +28,7 @@ type Coords = { lat: number; lng: number } | null;
 export default function CaptureScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const headerHeight = useHeaderHeight();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -111,6 +113,7 @@ export default function CaptureScreen() {
     return (
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={headerHeight}
         style={[styles.container, { backgroundColor: colors.background }]}
       >
         <Image source={{ uri: photoUri }} style={styles.preview} contentFit="cover" accessible accessibilityLabel="Ảnh vừa chụp" />

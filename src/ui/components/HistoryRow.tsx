@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { daysLeft } from '../../domain/expiry';
 import type { ParkingRecord } from '../../domain/types';
 import { radius } from '../theme';
 import { useTheme } from '../useTheme';
@@ -11,10 +12,12 @@ type Props = { record: ParkingRecord; photoUri: string; now: number; onPress: ()
 export function HistoryRow({ record, photoUri, now, onPress }: Props) {
   const { colors } = useTheme();
   const title = record.note || 'Không có ghi chú';
+  const expiryText =
+    record.expiresAt === null ? 'Đã giữ lại' : `còn ${daysLeft(record.expiresAt, now)} ngày`;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={`${title}, ${expiryText}`}
       onPress={onPress}
       style={({ pressed }) => [styles.row, { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 }]}
     >
