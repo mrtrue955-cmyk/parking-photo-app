@@ -209,6 +209,9 @@ export default function CaptureScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text variant="caption" muted style={styles.hint}>
+        Chụp gần số cột để app tự đọc
+      </Text>
       <View style={styles.camera}>
         <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
       </View>
@@ -232,6 +235,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: spacing.screen, gap: spacing.md },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.lg },
   message: { textAlign: 'center' },
+  hint: { textAlign: 'center' },
   camera: { flex: 1, borderRadius: radius.card, overflow: 'hidden' },
   preview: { flex: 1, borderRadius: radius.card },
   input: {

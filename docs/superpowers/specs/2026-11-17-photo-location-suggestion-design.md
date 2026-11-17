@@ -23,6 +23,8 @@ Sau khi chụp ảnh vị trí xe, app đọc chữ trong ảnh (tên tầng, kh
 5. Người dùng bấm "Chụp lại": kết quả của ảnh cũ bị bỏ qua, ảnh mới chạy OCR mới và trạng thái "đã gõ" được đặt lại.
 6. Người dùng bắt đầu gõ: dòng chữ phụ biến mất.
 
+Ở bước camera (trước khi chụp), giữa phần đầu màn hình và khung ngắm có một dòng chữ phụ, căn giữa: "Chụp gần số cột để app tự đọc". Lý do: thử thật với Apple Vision trên bốn ảnh rộng chụp hầm xe cho thấy các nhãn nhỏ ở ảnh chụp xa thường không được đọc; chụp gần số cột thì đọc tốt hơn.
+
 Thông báo và mọi nơi khác dùng ghi chú **không đổi**: gợi ý chỉ là chữ trong ô ghi chú cho tới khi lưu.
 
 ## Quy tắc nhận ra vị trí (logic thuần, có test)
