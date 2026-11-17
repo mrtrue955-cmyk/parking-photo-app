@@ -20,14 +20,15 @@ Ngay sau khi người dùng lưu một vị trí đỗ xe, app đăng một thô
 - "Đã lấy xe" và "Dẫn đường về xe". Xe không có GPS thì chỉ có nút "Đã lấy xe".
 - Cả hai nút **mở app** (cấu hình `opensAppToForeground`), vì hành động chạy khi app đã bị tắt hẳn không đáng tin cậy.
 - "Đã lấy xe": nếu bản ghi trong thông báo vẫn là xe đang đậu thì đánh dấu đã lấy xe (cùng logic với nút trong app); trong mọi trường hợp đều gỡ thông báo.
-- "Dẫn đường về xe": mở bản đồ tới toạ độ lưu trong thông báo (dùng lại `directionsUrl`); thông báo giữ nguyên vì xe vẫn đang đậu.
-- Chạm vào thân thông báo: mở app (Home).
+- "Dẫn đường về xe": mở bản đồ tới toạ độ lưu trong thông báo (dùng lại `directionsUrl`); thông báo giữ nguyên vì xe vẫn đang đậu. Trên iOS hệ thống tự gỡ thông báo khi bấm nút, nên app đăng lại thông báo **im lặng** (không banner, chỉ vào danh sách) trước khi mở bản đồ để vẫn có đúng một thông báo cho xe đang đậu. Nếu thông báo đã cũ (xe đang đậu là bản ghi khác) thì không mở bản đồ mà chỉ gỡ thông báo.
+- Chạm vào thân thông báo: mở app (Home). Trên iOS hệ thống gỡ thông báo khi chạm (Android cũng gỡ khi chạm thân), nên app đăng lại thông báo im lặng (không banner) để vẫn có đúng một thông báo cho xe đang đậu.
 
 **Vòng đời (luôn một thông báo cho xe đang đậu)**
 - Đăng ngay sau khi lưu thành công và sau bước xin quyền thông báo hiện có.
 - Dùng một mã định danh cố định, nên chụp vị trí mới sẽ **thay** thông báo cũ, không bao giờ có hai thông báo.
 - Gỡ thông báo khi xe đang đậu không còn nữa, gồm: xoá bản ghi xe đang đậu (xoá một ảnh cũ trong lịch sử không gỡ gì); bấm "Đã lấy xe" trong app hoặc trên thông báo; xe đang đậu bị dọn khi hết hạn.
 - Để giữ bất biến một cách chắc chắn, mỗi lần làm mới dữ liệu nếu không còn xe đang đậu thì gỡ thông báo (gỡ một thông báo không tồn tại là vô hại). Làm mới **không** đăng lại thông báo, tránh hiện banner lặp lại.
+- Sau khi bấm "Dẫn đường về xe" hoặc chạm thân thông báo, hệ thống có thể đã gỡ thông báo, nên app đăng lại im lặng (cờ `silent` trong dữ liệu, bộ xử lý foreground ẩn banner) cho xe đang đậu hiện tại.
 - Chỉ đăng khi đã có quyền thông báo; chưa có thì bỏ qua âm thầm, không ảnh hưởng việc lưu.
 - Lỗi khi đăng hoặc gỡ thông báo không bao giờ chặn việc lưu ảnh hay điều hướng.
 

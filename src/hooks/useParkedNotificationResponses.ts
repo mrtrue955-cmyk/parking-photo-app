@@ -6,7 +6,7 @@ import { pickCurrent } from '../domain/current';
 import { parseParkedAction, PARKED_NOTIFICATION_ID } from '../domain/parkedNotification';
 import { emitParkingChanged } from './parkingEvents';
 import { directionsUrl } from '../native/directions';
-import { dismissParkedNotification } from '../native/parkedNotification';
+import { dismissParkedNotification, showParkedNotification } from '../native/parkedNotification';
 
 async function handleParkedResponse(actionIdentifier: string, data: unknown): Promise<void> {
   const action = parseParkedAction(actionIdentifier, data);
@@ -25,7 +25,15 @@ async function handleParkedResponse(actionIdentifier: string, data: unknown): Pr
       await dismissParkedNotification();
       return;
     }
+    // Re-post first: iOS removed the notification on the tap, and the silent flag is only
+    // honoured by the foreground handler, before Maps sends the app to the background.
+    if (current) await showParkedNotification(current, { silent: true });
     await Linking.openURL(directionsUrl(action.lat, action.lng));
+  } else {
+    // Body tap: the system removed the notification, so put it back silently.
+    const service = await getParkingService();
+    const current = pickCurrent(await service.list());
+    if (current) await showParkedNotification(current, { silent: true });
   }
 }
 

@@ -35,7 +35,10 @@ export async function registerParkedCategories(): Promise<void> {
 }
 
 /** Posts (or replaces) the single parked-spot notification. Never rejects. */
-export async function showParkedNotification(record: ParkingRecord): Promise<void> {
+export async function showParkedNotification(
+  record: ParkingRecord,
+  options?: { silent?: boolean },
+): Promise<void> {
   try {
     const permission = await Notifications.getPermissionsAsync();
     if (!permission.granted) {
@@ -50,7 +53,7 @@ export async function showParkedNotification(record: ParkingRecord): Promise<voi
         title,
         body,
         categoryIdentifier: parkedCategoryFor(record.lat !== null && record.lng !== null),
-        data: { recordId: record.id, lat: record.lat, lng: record.lng },
+        data: { recordId: record.id, lat: record.lat, lng: record.lng, ...(options?.silent ? { silent: true } : {}) },
       },
       trigger: null,
     });

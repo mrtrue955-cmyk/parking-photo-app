@@ -1,5 +1,6 @@
 import {
   buildParkedText,
+  isSilentPost,
   parkedCategoryFor,
   parseParkedAction,
   PARKED_ACTION_COLLECT,
@@ -116,4 +117,17 @@ test('parseParkedAction treats the default tap and unknown actions as "open"', (
   // Then both just open the app
   expect(parseParkedAction('expo.modules.notifications.actions.DEFAULT', { recordId: 'r1' })).toEqual({ type: 'open' });
   expect(parseParkedAction('something-else', {})).toEqual({ type: 'open' });
+});
+
+test('isSilentPost is true only when data.silent is exactly true', () => {
+  // Given notification data that is silent, not silent, missing the flag, or junk
+  // When checking it
+  // Then only silent === true counts, so a normal post still shows a banner
+  expect(isSilentPost({ silent: true })).toBe(true);
+  expect(isSilentPost({ silent: false })).toBe(false);
+  expect(isSilentPost({ recordId: 'r1' })).toBe(false);
+  expect(isSilentPost({ silent: 'true' })).toBe(false);
+  expect(isSilentPost(undefined)).toBe(false);
+  expect(isSilentPost(null)).toBe(false);
+  expect(isSilentPost('junk')).toBe(false);
 });

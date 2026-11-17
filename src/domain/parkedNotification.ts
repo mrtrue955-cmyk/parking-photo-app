@@ -41,3 +41,8 @@ export function parseParkedAction(actionIdentifier: string, data: unknown): Park
   }
   return { type: 'open' };
 }
+
+/** True only for a notification re-posted silently (list only, no banner). */
+export function isSilentPost(data: unknown): boolean {
+  return asRecord(data)?.silent === true;
+}
