@@ -31,10 +31,9 @@ export default function History() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const bottomSpace = useTabBarSpace();
-  const { records, loaded } = useParking();
+  const { records, loaded, now } = useParking();
   const [filter, setFilter] = useState<HistoryFilter>('all');
   const files = getPhotoFiles();
-  const now = Date.now();
 
   if (!loaded) return <View style={[styles.fill, { backgroundColor: colors.background }]} />;
 

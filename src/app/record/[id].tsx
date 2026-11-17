@@ -20,7 +20,7 @@ export default function RecordDetail() {
   const router = useRouter();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { records, loaded, refresh } = useParking();
+  const { records, loaded, now, refresh } = useParking();
   const [busy, setBusy] = useState(false);
   const record = records.find((r) => r.id === id);
 
@@ -41,7 +41,6 @@ export default function RecordDetail() {
 
   const recordId = record.id;
   const uri = getPhotoFiles().uriFor(record.photoPath);
-  const now = Date.now();
 
   async function keep() {
     if (busy) return;

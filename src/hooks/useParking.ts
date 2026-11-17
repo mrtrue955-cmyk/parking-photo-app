@@ -8,6 +8,9 @@ import { syncReminders } from '../native/reminders';
 export function useParking() {
   const [records, setRecords] = useState<ParkingRecord[]>([]);
   const [loaded, setLoaded] = useState(false);
+  // Reading Date.now() in a compiled component body gets cached by React Compiler,
+  // so the clock lives in state and is refreshed together with the data.
+  const [now, setNow] = useState(() => Date.now());
 
   const latestRequest = useRef(0);
 
@@ -21,6 +24,7 @@ export function useParking() {
       if (requestId === latestRequest.current) {
         setRecords(list);
         setLoaded(true);
+        setNow(Date.now());
       }
     } catch (error) {
       console.warn('Failed to refresh parking records', error);
@@ -48,5 +52,5 @@ export function useParking() {
     return () => subscription.remove();
   }, [refresh]);
 
-  return { records, loaded, refresh };
+  return { records, loaded, now, refresh };
 }

@@ -19,11 +19,10 @@ export default function Home() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const bottomSpace = useTabBarSpace();
-  const { records, loaded, refresh } = useParking();
+  const { records, loaded, now, refresh } = useParking();
   const files = getPhotoFiles();
   const current = pickCurrent(records);
   const recent = historyOf(records).slice(0, 3);
-  const now = Date.now();
 
   if (!loaded) return <View style={[styles.fill, { backgroundColor: colors.background }]} />;
 
