@@ -109,3 +109,83 @@ test('a multi-line OCR block still yields the level and pillar', () => {
   expect(suggestLocationNote(toTextLines(['B2\nCột 14']))).toBe('B2, cột 14');
   expect(suggestLocationNote(toTextLines(['B2\nA14']))).toBe('B2, A14');
 });
+
+test('reads a three-digit-or-less B code as a pillar, not a level', () => {
+  // Given "B14" (a pillar) and "B2" (a level) in either order
+  // When suggesting a note
+  // Then the level comes first and B14 is the pillar
+  expect(suggestLocationNote(['B14', 'B2'])).toBe('B2, B14');
+  expect(suggestLocationNote(['B14'])).toBe('B14');
+});
+
+test('reads "tầng hầm N" as basement N and keeps plain levels', () => {
+  // Given a basement level keyword with a bare number, and plain keywords
+  // When suggesting a note
+  // Then the basement becomes B2 and the others stay "Tầng N"
+  expect(suggestLocationNote(['Tầng hầm 2'])).toBe('B2');
+  expect(suggestLocationNote(['BASEMENT FLOOR 3'])).toBe('Tầng 3');
+  expect(suggestLocationNote(['FLOOR BASEMENT 3'])).toBe('B3');
+  expect(suggestLocationNote(['TANG 2'])).toBe('Tầng 2');
+});
+
+test('reads basement signs without the word "tầng"', () => {
+  // Given basement signs written "HẦM 2", "HẦM B2" and "BASEMENT 2"
+  // When suggesting a note
+  // Then each gives B2
+  expect(suggestLocationNote(['HẦM 2'])).toBe('B2');
+  expect(suggestLocationNote(['HẦM B2'])).toBe('B2');
+  expect(suggestLocationNote(['BASEMENT 2'])).toBe('B2');
+});
+
+test('reads combined level and pillar labels on one line', () => {
+  // Given labels like "B2-A14", "P2-C14", "B2-14", "B2 - 14", "B2/14" and "B2 14"
+  // When suggesting a note
+  // Then the level and the pillar are both taken
+  expect(suggestLocationNote(['B2-A14'])).toBe('B2, A14');
+  expect(suggestLocationNote(['P2-C14'])).toBe('P2, C14');
+  expect(suggestLocationNote(['B2-14'])).toBe('B2, cột 14');
+  expect(suggestLocationNote(['B2 - 14'])).toBe('B2, cột 14');
+  expect(suggestLocationNote(['B2/14'])).toBe('B2, cột 14');
+  expect(suggestLocationNote(['B2 14'])).toBe('B2, cột 14');
+});
+
+test('a combined label only fills empty slots', () => {
+  // Given a level already found by a keyword and then a combined label
+  // When suggesting a note
+  // Then the first level is kept and the pillar comes from the label
+  expect(suggestLocationNote(['TẦNG 3', 'B2-14'])).toBe('Tầng 3, cột 14');
+});
+
+test('ignores one trailing punctuation mark on standalone codes', () => {
+  // Given codes followed by a period, colon or comma
+  // When suggesting a note
+  // Then they still match
+  expect(suggestLocationNote(['B2.', 'C14.'])).toBe('B2, C14');
+  expect(suggestLocationNote(['B2:'])).toBe('B2');
+  expect(suggestLocationNote(['B2-14,'])).toBe('B2, cột 14');
+});
+
+test('takes a level token from a pillar keyword line', () => {
+  // Given a level token before or after a pillar keyword
+  // When suggesting a note
+  // Then it becomes the level
+  expect(suggestLocationNote(['B2 - Cột 14'])).toBe('B2, cột 14');
+  expect(suggestLocationNote(['Cột 14 - B2'])).toBe('B2, cột 14');
+  expect(suggestLocationNote(['Cột B2'])).toBe('cột B2');
+});
+
+test('tolerates a zero in place of the O of "cột"', () => {
+  // Given OCR that read "C0T 14"
+  // When suggesting a note
+  // Then it is a pillar keyword
+  expect(suggestLocationNote(['C0T 14'])).toBe('cột 14');
+});
+
+test('stays silent on look-alike text', () => {
+  // Given direction signs, plates, times, years and exit signs
+  // When suggesting a note
+  // Then nothing is suggested
+  for (const line of ['B1 B2', '51A-123.45', '30E-123.45', '12:30', 'B2-2026', 'B12-14', 'EXIT B2 ONLY', '120.000', '2026']) {
+    expect(suggestLocationNote([line])).toBeNull();
+  }
+});

@@ -34,6 +34,12 @@ Thông báo và mọi nơi khác dùng ghi chú **không đổi**: gợi ý ch�
   - **Tầng:** cả dòng là mã tầng dạng `B1`, `B2`, `L3`, `P1`; hoặc dòng có từ khoá `TANG`, `LEVEL`, `FLOOR` kèm số hay mã (kết quả "Tầng 2" hoặc mã như "B2").
   - **Khu:** dòng có từ khoá `KHU`, `ZONE`, `AREA` kèm một chữ cái (kết quả "khu C").
   - **Cột:** dòng có từ khoá `COT`, `PILLAR`, `COLUMN` kèm số hay mã (kết quả "cột 14"); hoặc, khi không có từ khoá, **cả dòng** là mã dạng một chữ cái và 1 đến 3 chữ số như `A12` hay `C-14` (kết quả "A12", "C14").
+- Các dạng nhãn được nhận thêm (mã đứng một mình vẫn phải chiếm cả dòng, được bỏ một dấu `.:,;` ở cuối):
+  - Mã tầng một chữ số cho `B` và `P`, tối đa hai chữ số cho `L`; vì vậy `B14` là cột chứ không phải tầng.
+  - "Tầng hầm 2" cho `B2`; biển hầm không có chữ "tầng" (`HẦM 2`, `HẦM B2`, `BASEMENT 2`) cũng cho `B2`.
+  - Nhãn gộp trên một dòng: `B2-A14` và `P2-C14` (tầng và mã cột), `B2-14`, `B2 - 14`, `B2/14`, `B2 14` (tầng và "cột 14"); `B1 B2` (mũi tên chỉ hướng) không khớp.
+  - Dòng có từ khoá cột kèm mã tầng `B2` hoặc `L2` (ví dụ `B2 - Cột 14`, `Cột 14 - B2`) lấy mã đó làm tầng khi chưa có tầng.
+  - Từ khoá cột chấp nhận số 0 thay cho chữ O (`C0T 14`).
 - Cách ghép: `{tầng}, {khu}, {cột}` theo thứ tự đó, bỏ thành phần không có, ví dụ "B2, khu C, cột 14". Mỗi loại chỉ lấy kết quả đầu tiên tìm được.
 - Chống nhận nhầm: dòng chỉ gồm số, dòng dài (ví dụ biển số xe, câu quảng cáo) không được coi là mã; mã đứng một mình phải chiếm **cả dòng**.
 - Không có thành phần nào: trả `null`. Kết quả bị cắt về tối đa 80 ký tự (giới hạn của ô ghi chú).
