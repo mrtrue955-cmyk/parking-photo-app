@@ -22,6 +22,7 @@ export function useParking() {
       console.warn('Failed to refresh parking records', error);
       return;
     }
+    if (requestId !== latestRequest.current) return;
     try {
       await syncReminders(list, Date.now());
     } catch (error) {
