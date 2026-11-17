@@ -47,8 +47,8 @@ export const fontFamilies = {
 } as const;
 
 export const typography = {
-  sign: { fontFamily: fontFamilies.condensed, fontSize: 44, lineHeight: 48 },
-  title: { fontFamily: fontFamilies.condensed, fontSize: 28, lineHeight: 32 },
+  sign: { fontFamily: fontFamilies.condensed, fontSize: 44, lineHeight: 54 },
+  title: { fontFamily: fontFamilies.condensed, fontSize: 28, lineHeight: 34 },
   rowTitle: { fontFamily: fontFamilies.condensed, fontSize: 20, lineHeight: 24 },
   button: { fontFamily: fontFamilies.semibold, fontSize: 18, lineHeight: 24 },
   body: { fontFamily: fontFamilies.regular, fontSize: 17, lineHeight: 24 },
