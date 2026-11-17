@@ -5,6 +5,7 @@ import { getParkingService, getPhotoFiles } from '../../container';
 import { historyOf, pickCurrent } from '../../domain/current';
 import { useParking } from '../../hooks/useParking';
 import { directionsUrl } from '../../native/directions';
+import { dismissParkedNotification } from '../../native/parkedNotification';
 import { TextButton } from '../../ui/components/Button';
 import { EmptyState } from '../../ui/components/EmptyState';
 import { HistoryCard } from '../../ui/components/HistoryCard';
@@ -33,6 +34,7 @@ export default function Home() {
   async function collect() {
     try {
       await (await getParkingService()).collectCurrent();
+      await dismissParkedNotification();
       await refresh();
     } catch {
       Alert.alert('Có lỗi xảy ra', 'Vui lòng thử lại.');

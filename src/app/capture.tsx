@@ -15,7 +15,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService } from '../container';
+import type { ParkingRecord } from '../domain/types';
 import { getCoords } from '../native/location';
+import { showParkedNotification } from '../native/parkedNotification';
 import { ensureNotificationPermission } from '../native/reminders';
 import { PrimaryButton, SecondaryButton } from '../ui/components/Button';
 import { useScreenHeaderHeight } from '../ui/components/ScreenHeader';
@@ -94,10 +96,11 @@ export default function CaptureScreen() {
     if (!photoUri) return;
     setBusy(true);
     let saved = false;
+    let savedRecord: ParkingRecord | null = null;
     try {
       try {
         const service = await getParkingService();
-        await service.capture({
+        savedRecord = await service.capture({
           tempUri: photoUri,
           lat: coords?.lat ?? null,
           lng: coords?.lng ?? null,
@@ -109,6 +112,7 @@ export default function CaptureScreen() {
       }
       if (saved) {
         await askNotificationOnce().catch(() => undefined);
+        if (savedRecord) await showParkedNotification(savedRecord);
         router.back();
       }
     } finally {

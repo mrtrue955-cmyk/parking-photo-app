@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService, getPhotoFiles } from '../../container';
+import { pickCurrent } from '../../domain/current';
 import { useParking } from '../../hooks/useParking';
 import { historyStatus } from '../../domain/history';
 import { directionsUrl } from '../../native/directions';
+import { dismissParkedNotification } from '../../native/parkedNotification';
 import { GalleryPermissionDeniedError } from '../../services/ports';
 import { PrimaryButton, SecondaryButton, TextButton } from '../../ui/components/Button';
 import { Chip } from '../../ui/components/Chip';
@@ -70,6 +72,7 @@ export default function RecordDetail() {
         onPress: async () => {
           if (busy) return;
           setBusy(true);
+          const wasCurrent = pickCurrent(records)?.id === recordId;
           try {
             await (await getParkingService()).deleteNow(recordId);
           } catch {
@@ -77,6 +80,7 @@ export default function RecordDetail() {
             setBusy(false);
             return;
           }
+          if (wasCurrent) await dismissParkedNotification();
           setBusy(false);
           router.back();
         },
