@@ -189,3 +189,97 @@ test('stays silent on look-alike text', () => {
     expect(suggestLocationNote([line])).toBeNull();
   }
 });
+
+// Look-alike letters, written with escapes: Cyrillic Ve + Ze, and Cyrillic "SOT".
+const CYRILLIC_B3 = 'ВЗ';
+const CYRILLIC_COT = 'СОТ';
+
+test('folds Cyrillic look-alikes into Latin letters and digits', () => {
+  // Given Vision output that mixed Cyrillic Ve + Ze into a "B3" label, and a Cyrillic "COT" keyword
+  // When suggesting a note
+  // Then they behave like the Latin text
+  expect(suggestLocationNote([CYRILLIC_B3])).toBe('B3');
+  expect(suggestLocationNote([`${CYRILLIC_COT} 14`])).toBe('cột 14');
+});
+
+test('folds Greek look-alikes into Latin letters', () => {
+  // Given a Greek Beta before "2" and a Greek Kappa starting "KHU C"
+  // When suggesting a note
+  // Then the Greek letters are read as their Latin twins
+  expect(suggestLocationNote(['Β' + '2'])).toBe('B2');
+  expect(suggestLocationNote(['Κ' + 'HU C'])).toBe('khu C');
+});
+
+test('does not fold letters that have no look-alike entry', () => {
+  // Given a Cyrillic letter that is not in the look-alike table (Zhe) next to a digit
+  // When suggesting a note
+  // Then it is not turned into a Latin code
+  expect(suggestLocationNote(['Ж' + '3'])).toBeNull();
+});
+
+test('reads a lone number as the pillar next to a unique lone letter', () => {
+  // Given a zone letter repeated on several pillars and one pillar number
+  // When suggesting a note
+  // Then the letter and number form the pillar
+  expect(suggestLocationNote(['D', 'D', 'D', 'D', '27'])).toBe('D27');
+});
+
+test('reads the real AEON garage photo as D27', () => {
+  // Given the exact lines Apple Vision returned for the AEON photo
+  // When suggesting a note
+  // Then the repeated zone letter and the pillar number combine
+  expect(
+    suggestLocationNote(['ÆON MALL', 'KON MALL Sn Tim', 'D', 'D', 'D', 'D', '27']),
+  ).toBe('D27');
+});
+
+test('reads the real orange pillar photo as level B3 and pillar 22', () => {
+  // Given Vision output "22" and a Cyrillic-mixed "B3"
+  // When suggesting a note
+  // Then B3 is the level and the lone number is the pillar
+  expect(suggestLocationNote(['22', CYRILLIC_B3])).toBe('B3, cột 22');
+  expect(suggestLocationNote(['B3', '22'])).toBe('B3, cột 22');
+});
+
+test('keeps leading zeros and combines level, letter and number', () => {
+  // Given a level, one letter and a zero-padded number
+  // When suggesting a note
+  // Then the pillar is letter + number as written
+  expect(suggestLocationNote(['01', 'E', 'B1'])).toBe('B1, E01');
+  expect(suggestLocationNote(['F', 'B1', '2'])).toBe('B1, F2');
+});
+
+test('uses "cột N" for a lone number when a zone keyword was found', () => {
+  // Given a zone keyword, a lone letter and a lone number
+  // When suggesting a note
+  // Then the number is a plain pillar and the letter is not glued to it
+  expect(suggestLocationNote(['KHU A', 'D', '27'])).toBe('khu A, cột 27');
+});
+
+test('does not read a lone number without another location signal', () => {
+  // Given a number alone, a number with an excluded letter, or two different letters
+  // When suggesting a note
+  // Then nothing is suggested
+  expect(suggestLocationNote(['27'])).toBeNull();
+  expect(suggestLocationNote(['I', '27'])).toBeNull();
+  expect(suggestLocationNote(['P', '27'])).toBeNull();
+  expect(suggestLocationNote(['O', '27'])).toBeNull();
+  expect(suggestLocationNote(['D', 'E', '27'])).toBeNull();
+});
+
+test('ignores four-digit numbers and ambiguous number sets', () => {
+  // Given a year next to a level, and two different numbers next to a level
+  // When suggesting a note
+  // Then no pillar is invented
+  expect(suggestLocationNote(['2026', 'B2'])).toBe('B2');
+  expect(suggestLocationNote(['27', '16', 'B2'])).toBe('B2');
+  expect(suggestLocationNote(['27', '27', 'B2'])).toBe('B2, cột 27');
+});
+
+test('stays silent on the real noise photos', () => {
+  // Given the lines Vision returned for photos without a pillar label
+  // When suggesting a note
+  // Then nothing is suggested
+  expect(suggestLocationNote(['LỐI VÀO', 'SAKURA STATION', 'SERENE', '640 × 480'])).toBeNull();
+  expect(suggestLocationNote(['MEGATECH'])).toBeNull();
+});

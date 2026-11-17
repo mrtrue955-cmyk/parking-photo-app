@@ -28,12 +28,25 @@ export function toTextLines(blocks: string[]): string[] {
     .filter((line) => line.length > 0);
 }
 
+// Look-alike Cyrillic and Greek letters that OCR language correction mixes into Latin text.
+// Escapes only, so no invisible or confusable characters live in the source.
+const LOOKALIKES: Record<string, string> = {
+  '\u0410': 'A', '\u0412': 'B', '\u0415': 'E', '\u0417': '3', '\u041A': 'K',
+  '\u041C': 'M', '\u041D': 'H', '\u041E': 'O', '\u0420': 'P', '\u0421': 'C',
+  '\u0422': 'T', '\u0425': 'X', '\u0423': 'Y', '\u0406': 'I', '\u0405': 'S',
+  '\u0391': 'A', '\u0392': 'B', '\u0395': 'E', '\u0396': 'Z', '\u0397': 'H',
+  '\u0399': 'I', '\u039A': 'K', '\u039C': 'M', '\u039D': 'N', '\u039F': 'O',
+  '\u03A1': 'P', '\u03A4': 'T', '\u03A5': 'Y', '\u03A7': 'X',
+};
+const LOOKALIKE_CHARS = new RegExp(`[${Object.keys(LOOKALIKES).join('')}]`, 'g');
+
 function normalize(line: string): string {
   return line
     .replace(/[đĐ]/g, 'd')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toUpperCase()
+    .replace(LOOKALIKE_CHARS, (char) => LOOKALIKES[char])
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -55,6 +68,8 @@ export function suggestLocationNote(lines: string[]): string | null {
   let level: string | null = null;
   let zone: string | null = null;
   let pillar: string | null = null;
+  const loneNumbers = new Set<string>();
+  const loneLetters = new Set<string>();
 
   for (const raw of lines) {
     const line = normalize(raw);
@@ -89,6 +104,10 @@ export function suggestLocationNote(lines: string[]): string | null {
     }
     if (keywordMatched) continue;
 
+    if (/^\d{1,3}$/.test(line)) loneNumbers.add(line);
+    // Not I, O or P: divider, zero and parking-sign look-alikes.
+    else if (/^[A-HJ-NQ-Z]$/.test(line)) loneLetters.add(line);
+
     const code = line.replace(/[.:,;]$/, '');
     const combined = COMBINED_CODE.exec(code);
     if (combined) {
@@ -111,6 +130,16 @@ export function suggestLocationNote(lines: string[]): string | null {
     }
     const pillarCode = PILLAR_CODE.exec(code);
     if (pillarCode && pillar === null) pillar = `${pillarCode[1]}${pillarCode[2]}`;
+  }
+
+  // Lone-number pillar: one clear number plus another location signal.
+  if (pillar === null && loneNumbers.size === 1) {
+    const [number] = [...loneNumbers];
+    const [letter] = [...loneLetters];
+    const uniqueLetter = loneLetters.size === 1;
+    if (level !== null || zone !== null || uniqueLetter) {
+      pillar = uniqueLetter && zone === null ? `${letter}${number}` : `cột ${number}`;
+    }
   }
 
   const parts = [level, zone, pillar].filter((part): part is string => part !== null);
