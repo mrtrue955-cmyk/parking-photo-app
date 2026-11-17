@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Linking } from 'react-native';
 import { getParkingService } from '../container';
 import { pickCurrent } from '../domain/current';
@@ -20,36 +20,34 @@ async function handleParkedResponse(actionIdentifier: string, data: unknown): Pr
   }
 }
 
-/** Handles taps on the parked-spot notification buttons, once per response (also on cold start). */
+/**
+ * Handles taps on the parked-spot notification buttons. Each tap is handled once: the listener
+ * delivers each tap once, and the launching tap is read from getLastNotificationResponse() and cleared.
+ */
 export function useParkedNotificationResponses(): void {
-  const handled = useRef<Set<string>>(new Set());
-
   useEffect(() => {
     // Not useLastNotificationResponse: it keeps its value when the identifier repeats,
     // and every parked notification shares one identifier.
     const handle = (response: Notifications.NotificationResponse) => {
       if (response.notification.request.identifier !== PARKED_NOTIFICATION_ID) return;
-      const key = `${response.notification.date}:${response.actionIdentifier}`;
-      if (handled.current.has(key)) return;
-      handled.current.add(key);
       handleParkedResponse(
         response.actionIdentifier,
         response.notification.request.content.data,
       ).catch((error) => console.warn('Failed to handle the parked notification response', error));
+      // The native layer keeps the last response until cleared; clear it so a remount cannot replay it.
+      // A repeat tap of the same button is a new event and still reaches the listener.
+      try {
+        Notifications.clearLastNotificationResponse();
+      } catch (error) {
+        console.warn('Failed to clear the last notification response', error);
+      }
     };
 
     const subscription = Notifications.addNotificationResponseReceivedListener(handle);
 
     // Cold start: the tap that launched the app arrived before the listener existed.
     const initial = Notifications.getLastNotificationResponse();
-    if (initial) {
-      handle(initial);
-      try {
-        Notifications.clearLastNotificationResponse();
-      } catch (error) {
-        console.warn('Failed to clear the last notification response', error);
-      }
-    }
+    if (initial) handle(initial);
 
     return () => subscription.remove();
   }, []);
