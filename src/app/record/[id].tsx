@@ -1,25 +1,39 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Button, Linking, ScrollView, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { getParkingService, getPhotoFiles } from '../../container';
-import { daysLeft } from '../../domain/expiry';
 import { useParking } from '../../hooks/useParking';
 import { directionsUrl } from '../../native/directions';
 import { GalleryPermissionDeniedError } from '../../services/ports';
+import { PrimaryButton, TextButton } from '../../ui/components/Button';
+import { ExpiryBar } from '../../ui/components/ExpiryBar';
+import { Text } from '../../ui/components/Text';
+import { radius, spacing } from '../../ui/theme';
+import { useTheme } from '../../ui/useTheme';
 
 export default function RecordDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { colors } = useTheme();
   const { records, loaded, refresh } = useParking();
   const [busy, setBusy] = useState(false);
   const record = records.find((r) => r.id === id);
 
-  if (!loaded) return <ActivityIndicator style={styles.loading} />;
-  if (!record) return <Text style={styles.message}>Ảnh không còn tồn tại.</Text>;
+  if (!loaded) {
+    return <ActivityIndicator style={styles.loading} color={colors.primary} />;
+  }
+  if (!record) {
+    return (
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
+        <Text muted>Ảnh không còn tồn tại.</Text>
+      </View>
+    );
+  }
 
   const recordId = record.id;
   const uri = getPhotoFiles().uriFor(record.photoPath);
+  const now = Date.now();
 
   async function keep() {
     if (busy) return;
@@ -64,21 +78,29 @@ export default function RecordDetail() {
   }
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.container}>
-      <Image source={{ uri }} style={styles.photo} contentFit="contain" />
-      {record.note ? <Text style={styles.note}>{record.note}</Text> : null}
-      <Text style={styles.meta}>Chụp lúc {new Date(record.createdAt).toLocaleString('vi-VN')}</Text>
-      <Text style={styles.meta}>
-        {record.expiresAt === null
-          ? 'Đã giữ lại, không tự xoá'
-          : `Tự xoá sau ${daysLeft(record.expiresAt, Date.now())} ngày (${new Date(record.expiresAt).toLocaleDateString('vi-VN')})`}
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      style={{ backgroundColor: colors.background }}
+      contentContainerStyle={styles.container}
+    >
+      <Image source={{ uri }} style={styles.photo} contentFit="cover" accessible accessibilityLabel="Ảnh vị trí xe" />
+      {record.note ? (
+        <Text variant="sign" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>
+          {record.note}
+        </Text>
+      ) : (
+        <Text muted>Không có ghi chú</Text>
+      )}
+      <Text variant="caption" muted>
+        Chụp lúc {new Date(record.createdAt).toLocaleString('vi-VN')}
       </Text>
+      <ExpiryBar expiresAt={record.expiresAt} now={now} />
       {record.lat !== null && record.lng !== null ? (
-        <>
-          <Text style={styles.meta}>
+        <View style={styles.block}>
+          <Text variant="caption" muted>
             Toạ độ: {record.lat.toFixed(5)}, {record.lng.toFixed(5)}
           </Text>
-          <Button
+          <TextButton
             title="Mở bản đồ"
             onPress={() =>
               Linking.openURL(directionsUrl(record.lat!, record.lng!)).catch(() =>
@@ -86,19 +108,20 @@ export default function RecordDetail() {
               )
             }
           />
-        </>
+        </View>
       ) : null}
-      {record.expiresAt !== null ? <Button title="Giữ lại" onPress={keep} disabled={busy} /> : null}
-      <Button title="Xoá ngay" color="#c00" onPress={confirmDelete} disabled={busy} />
+      {record.expiresAt !== null ? <PrimaryButton title="Giữ lại" onPress={keep} disabled={busy} /> : null}
+      <View style={styles.dangerZone}>
+        <TextButton title="Xoá ngay" tone="danger" onPress={confirmDelete} disabled={busy} />
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, gap: 10 },
-  photo: { width: '100%', height: 360, borderRadius: 8 },
-  note: { fontSize: 18, fontWeight: '600' },
-  meta: { color: '#666' },
+  container: { padding: spacing.screen, gap: spacing.md, paddingBottom: spacing.xl },
+  photo: { width: '100%', height: 320, borderRadius: radius.card },
+  block: { gap: spacing.xs },
+  dangerZone: { marginTop: spacing.xl, alignItems: 'center' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  message: { padding: 24, textAlign: 'center' },
 });
