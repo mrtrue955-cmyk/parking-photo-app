@@ -112,7 +112,7 @@ Mọi thành phần có `accessibilityLabel`/`accessibilityRole` phù hợp; tha
 
 - Font tải lỗi: vẫn hiển thị bằng font hệ thống (không chặn app) và không crash.
 - Ghi chú dài hoặc trống: tự co hai dòng; trống thì hiện "Không có ghi chú" với chữ phụ.
-- Ảnh không tải được: khung xám với biểu tượng ảnh hỏng, không làm vỡ bố cục.
+- Ảnh thiếu file: bản ghi bị dọn tự động khi mở app (hành vi hiện có), nên không cần giao diện riêng.
 - Chữ hệ thống phóng to: bố cục cuộn được, nút không bị cắt.
 
 ## Kiểm thử
@@ -124,4 +124,4 @@ Mọi thành phần có `accessibilityLabel`/`accessibilityRole` phù hợp; tha
 
 ## Phụ thuộc mới
 
-`expo-font` và gói font Barlow (`@expo-google-fonts/barlow`, `@expo-google-fonts/barlow-condensed`), cài bằng `npx expo install`. App cần build native lại sau khi cài.
+`expo-font` và gói font Barlow (`@expo-google-fonts/barlow`, `@expo-google-fonts/barlow-condensed`), cài bằng `npx expo install`. Không cần build native lại: `expo-font` đã nằm trong bản build hiện tại và font được nạp lúc chạy bằng `useFonts`.
