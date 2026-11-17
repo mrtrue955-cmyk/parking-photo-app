@@ -120,38 +120,37 @@ export default function CaptureScreen() {
     return (
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={headerHeight}
-        style={[
-          styles.container,
-          { backgroundColor: colors.background, paddingBottom: spacing.screen + insets.bottom },
-        ]}
+        keyboardVerticalOffset={headerHeight - insets.bottom}
+        style={{ flex: 1, backgroundColor: colors.background }}
       >
-        <Image
-          source={{ uri: photoUri }}
-          style={styles.preview}
-          contentFit="cover"
-          accessible
-          accessibilityLabel="Ảnh vừa chụp"
-        />
-        <Text variant="caption" muted>
-          {coords ? 'Đã lấy vị trí GPS' : 'Không lấy được GPS, sẽ không có dẫn đường'}
-        </Text>
-        <TextInput
-          style={[
-            styles.input,
-            { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text },
-          ]}
-          placeholder="Ghi chú (ví dụ: B2, cột 14)"
-          placeholderTextColor={colors.textMuted}
-          cursorColor={colors.accent}
-          selectionColor={colors.primary}
-          accessibilityLabel="Ghi chú vị trí xe"
-          value={note}
-          onChangeText={setNote}
-          maxLength={80}
-        />
-        <PrimaryButton title={busy ? 'Đang lưu...' : 'Lưu'} onPress={save} disabled={busy} />
-        <SecondaryButton title="Chụp lại" onPress={() => setPhotoUri(null)} disabled={busy} />
+        <View style={[styles.container, { paddingBottom: spacing.screen + insets.bottom }]}>
+          <Image
+            source={{ uri: photoUri }}
+            style={styles.preview}
+            contentFit="cover"
+            accessible
+            accessibilityLabel="Ảnh vừa chụp"
+          />
+          <Text variant="caption" muted>
+            {coords ? 'Đã lấy vị trí GPS' : 'Không lấy được GPS, sẽ không có dẫn đường'}
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text },
+            ]}
+            placeholder="Ghi chú (ví dụ: B2, cột 14)"
+            placeholderTextColor={colors.textMuted}
+            cursorColor={colors.accent}
+            selectionColor={colors.primary}
+            accessibilityLabel="Ghi chú vị trí xe"
+            value={note}
+            onChangeText={setNote}
+            maxLength={80}
+          />
+          <PrimaryButton title={busy ? 'Đang lưu...' : 'Lưu'} onPress={save} disabled={busy} />
+          <SecondaryButton title="Chụp lại" onPress={() => setPhotoUri(null)} disabled={busy} />
+        </View>
       </KeyboardAvoidingView>
     );
   }
