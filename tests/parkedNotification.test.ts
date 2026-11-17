@@ -71,6 +71,31 @@ test('parseParkedAction reads the navigate action with valid coordinates', () =>
     type: 'navigate',
     lat: 10.5,
     lng: 106.7,
+    recordId: 'r1',
+  });
+});
+
+test('parseParkedAction gives a navigate action a null record id when it is missing', () => {
+  // Given the navigate action whose data has no usable record id
+  // When parsing it
+  // Then the record id is null, so the handler cannot verify it and navigates as before
+  expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { lat: 1, lng: 2 })).toEqual({
+    type: 'navigate',
+    lat: 1,
+    lng: 2,
+    recordId: null,
+  });
+});
+
+test('parseParkedAction accepts zero latitude and negative longitude', () => {
+  // Given valid coordinates on the equator and in the western hemisphere
+  // When parsing the navigate action
+  // Then they are accepted (0 and negatives are not "missing")
+  expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { recordId: 'r2', lat: 0, lng: -73.9 })).toEqual({
+    type: 'navigate',
+    lat: 0,
+    lng: -73.9,
+    recordId: 'r2',
   });
 });
 

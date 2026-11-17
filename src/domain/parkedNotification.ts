@@ -18,7 +18,7 @@ export function parkedCategoryFor(hasGps: boolean): string {
 
 export type ParkedAction =
   | { type: 'collect'; recordId: string | null }
-  | { type: 'navigate'; lat: number; lng: number }
+  | { type: 'navigate'; lat: number; lng: number; recordId: string | null }
   | { type: 'open' };
 
 function asRecord(data: unknown): Record<string, unknown> | null {
@@ -27,15 +27,16 @@ function asRecord(data: unknown): Record<string, unknown> | null {
 
 export function parseParkedAction(actionIdentifier: string, data: unknown): ParkedAction {
   const record = asRecord(data);
+  const id = record?.recordId;
+  const recordId = typeof id === 'string' && id !== '' ? id : null;
   if (actionIdentifier === PARKED_ACTION_COLLECT) {
-    const id = record?.recordId;
-    return { type: 'collect', recordId: typeof id === 'string' && id !== '' ? id : null };
+    return { type: 'collect', recordId };
   }
   if (actionIdentifier === PARKED_ACTION_NAVIGATE) {
     const lat = record?.lat;
     const lng = record?.lng;
     if (typeof lat === 'number' && Number.isFinite(lat) && typeof lng === 'number' && Number.isFinite(lng)) {
-      return { type: 'navigate', lat, lng };
+      return { type: 'navigate', lat, lng, recordId };
     }
   }
   return { type: 'open' };

@@ -18,6 +18,13 @@ async function handleParkedResponse(actionIdentifier: string, data: unknown): Pr
     await dismissParkedNotification();
     emitParkingChanged();
   } else if (action.type === 'navigate') {
+    const service = await getParkingService();
+    const current = pickCurrent(await service.list());
+    if (action.recordId !== null && current && current.id !== action.recordId) {
+      // Stale notification for an older spot: remove it instead of navigating to the wrong place.
+      await dismissParkedNotification();
+      return;
+    }
     await Linking.openURL(directionsUrl(action.lat, action.lng));
   }
 }

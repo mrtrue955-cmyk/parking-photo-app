@@ -38,7 +38,11 @@ export async function registerParkedCategories(): Promise<void> {
 export async function showParkedNotification(record: ParkingRecord): Promise<void> {
   try {
     const permission = await Notifications.getPermissionsAsync();
-    if (!permission.granted) return;
+    if (!permission.granted) {
+      // Never leave an older spot's notification behind when the new one cannot be posted.
+      await dismissParkedNotification();
+      return;
+    }
     const { title, body } = buildParkedText(record.note);
     await Notifications.scheduleNotificationAsync({
       identifier: PARKED_NOTIFICATION_ID,
@@ -52,6 +56,11 @@ export async function showParkedNotification(record: ParkingRecord): Promise<voi
     });
   } catch (error) {
     console.warn('Failed to show the parked notification', error);
+    try {
+      await dismissParkedNotification();
+    } catch {
+      // best effort
+    }
   }
 }
 
