@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService, getPhotoFiles } from '../../container';
 import { useParking } from '../../hooks/useParking';
 import { directionsUrl } from '../../native/directions';
@@ -16,6 +17,7 @@ export default function RecordDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { records, loaded, refresh } = useParking();
   const [busy, setBusy] = useState(false);
   const record = records.find((r) => r.id === id);
@@ -81,7 +83,7 @@ export default function RecordDetail() {
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       style={{ backgroundColor: colors.background }}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[styles.container, { paddingBottom: spacing.xl + insets.bottom }]}
     >
       <Image source={{ uri }} style={styles.photo} contentFit="cover" accessible accessibilityLabel="Ảnh vị trí xe" />
       {record.note ? (

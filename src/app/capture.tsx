@@ -14,6 +14,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService } from '../container';
 import { getCoords } from '../native/location';
 import { ensureNotificationPermission } from '../native/reminders';
@@ -29,6 +30,7 @@ export default function CaptureScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -114,7 +116,10 @@ export default function CaptureScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={headerHeight}
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={[
+          styles.container,
+          { backgroundColor: colors.background, paddingBottom: spacing.screen + insets.bottom },
+        ]}
       >
         <Image source={{ uri: photoUri }} style={styles.preview} contentFit="cover" accessible accessibilityLabel="Ảnh vừa chụp" />
         <Text variant="caption" muted>
@@ -143,7 +148,7 @@ export default function CaptureScreen() {
       <BayFrame style={styles.camera}>
         <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
       </BayFrame>
-      <View style={styles.shutterRow}>
+      <View style={[styles.shutterRow, { paddingBottom: spacing.sm + insets.bottom }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Chụp"

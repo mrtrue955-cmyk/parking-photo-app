@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Alert, FlatList, Linking, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService, getPhotoFiles } from '../container';
 import { historyOf, pickCurrent } from '../domain/current';
 import { useParking } from '../hooks/useParking';
@@ -14,6 +15,7 @@ import { useTheme } from '../ui/useTheme';
 export default function Home() {
   const router = useRouter();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { records, loaded, refresh } = useParking();
   const files = getPhotoFiles();
   const current = pickCurrent(records);
@@ -68,7 +70,11 @@ export default function Home() {
       keyExtractor={(item) => item.id}
       contentInsetAdjustmentBehavior="automatic"
       style={{ backgroundColor: colors.background }}
-      contentContainerStyle={[styles.list, centered ? styles.centered : null]}
+      contentContainerStyle={[
+        styles.list,
+        { paddingBottom: spacing.xl + insets.bottom },
+        centered ? styles.centered : null,
+      ]}
       ListHeaderComponent={
         <View style={styles.headerWrap}>
           {header}
