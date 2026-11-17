@@ -2,7 +2,6 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Image } from 'expo-image';
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
-import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -18,8 +17,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService } from '../container';
 import { getCoords } from '../native/location';
 import { ensureNotificationPermission } from '../native/reminders';
-import { BayFrame } from '../ui/components/BayFrame';
-import { PrimaryButton, TextButton } from '../ui/components/Button';
+import { PrimaryButton, SecondaryButton } from '../ui/components/Button';
+import { useScreenHeaderHeight } from '../ui/components/ScreenHeader';
 import { Text } from '../ui/components/Text';
 import { fontFamilies, radius, spacing } from '../ui/theme';
 import { useTheme } from '../ui/useTheme';
@@ -29,7 +28,7 @@ type Coords = { lat: number; lng: number } | null;
 export default function CaptureScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const headerHeight = useHeaderHeight();
+  const headerHeight = useScreenHeaderHeight();
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -38,7 +37,13 @@ export default function CaptureScreen() {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
 
-  if (!permission) return <ActivityIndicator style={styles.center} color={colors.primary} />;
+  if (!permission) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
   if (!permission.granted) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
@@ -121,7 +126,13 @@ export default function CaptureScreen() {
           { backgroundColor: colors.background, paddingBottom: spacing.screen + insets.bottom },
         ]}
       >
-        <Image source={{ uri: photoUri }} style={styles.preview} contentFit="cover" accessible accessibilityLabel="Ảnh vừa chụp" />
+        <Image
+          source={{ uri: photoUri }}
+          style={styles.preview}
+          contentFit="cover"
+          accessible
+          accessibilityLabel="Ảnh vừa chụp"
+        />
         <Text variant="caption" muted>
           {coords ? 'Đã lấy vị trí GPS' : 'Không lấy được GPS, sẽ không có dẫn đường'}
         </Text>
@@ -132,22 +143,24 @@ export default function CaptureScreen() {
           ]}
           placeholder="Ghi chú (ví dụ: B2, cột 14)"
           placeholderTextColor={colors.textMuted}
+          cursorColor={colors.accent}
+          selectionColor={colors.primary}
           accessibilityLabel="Ghi chú vị trí xe"
           value={note}
           onChangeText={setNote}
           maxLength={80}
         />
         <PrimaryButton title={busy ? 'Đang lưu...' : 'Lưu'} onPress={save} disabled={busy} />
-        <TextButton title="Chụp lại" onPress={() => setPhotoUri(null)} disabled={busy} />
+        <SecondaryButton title="Chụp lại" onPress={() => setPhotoUri(null)} disabled={busy} />
       </KeyboardAvoidingView>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <BayFrame style={styles.camera}>
+      <View style={styles.camera}>
         <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
-      </BayFrame>
+      </View>
       <View style={[styles.shutterRow, { paddingBottom: spacing.sm + insets.bottom }]}>
         <Pressable
           accessibilityRole="button"
@@ -157,7 +170,7 @@ export default function CaptureScreen() {
           onPress={takePhoto}
           style={[styles.shutterOuter, { borderColor: colors.text, opacity: busy ? 0.5 : 1 }]}
         >
-          <View style={[styles.shutterInner, { backgroundColor: colors.text }]} />
+          <View style={[styles.shutterInner, { backgroundColor: colors.primary }]} />
         </Pressable>
       </View>
     </View>
@@ -172,14 +185,14 @@ const styles = StyleSheet.create({
   preview: { flex: 1, borderRadius: radius.card },
   input: {
     borderWidth: 1,
-    borderRadius: radius.card,
+    borderRadius: radius.input,
     paddingHorizontal: spacing.md,
     paddingVertical: 12,
     minHeight: 48,
     fontFamily: fontFamilies.regular,
-    fontSize: 17,
+    fontSize: 16,
   },
-  shutterRow: { alignItems: 'center', paddingBottom: spacing.sm },
+  shutterRow: { alignItems: 'center' },
   shutterOuter: {
     width: 76,
     height: 76,
