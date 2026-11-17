@@ -57,6 +57,8 @@ Thông báo và mọi nơi khác dùng ghi chú **không đổi**: gợi ý ch�
 
 Thêm một module native, nên **phải build lại app** (`npx expo run:ios --device`); không dùng được trong Expo Go.
 
+**Lưu ý (Android):** mô hình chữ của Google ML Kit (thư viện phụ thuộc `com.google.android.gms:play-services-mlkit-text-recognition`) do Google Play services tải về ở lần dùng đầu tiên, nên lần đọc đầu có thể lỗi âm thầm khi không có mạng (không gợi ý gì), và Play services có thể liên hệ Google để cập nhật mô hình và gửi số liệu sử dụng. Ảnh chụp thì không bao giờ bị tải lên. Không làm config plugin cho việc này (ngoài phạm vi).
+
 ## Xử lý lỗi và trường hợp biên
 
 - OCR không có kết quả, lỗi, hoặc chạy quá 5 giây: im lặng, ô ghi chú để trống.

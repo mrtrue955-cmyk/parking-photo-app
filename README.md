@@ -3,8 +3,10 @@
 Take a photo of where you parked, and let it delete itself after 30 days.
 
 Photos are stored in the app's private storage, never in the Gallery, so
-supermarket pillar photos stop piling up in your camera roll. Everything stays
-on the device: there is no backend and no network code.
+supermarket pillar photos stop piling up in your camera roll. There is no
+backend, the app's own code makes no network requests, and photos are processed
+on the device. On Android, the Google ML Kit text model used for text
+recognition is downloaded by Google Play services on first use.
 
 ## Features
 
@@ -15,7 +17,9 @@ on the device: there is no backend and no network code.
   scheduled the day before.
 - "Giữ lại" (keep) saves a photo to the Gallery and exempts it from deletion.
 - Suggests the location note from the photo (level, zone, pillar number) using
-  on-device text recognition; the photo never leaves the phone.
+  on-device text recognition; the photo never leaves the phone. On Android the
+  text model is downloaded by Google Play services on first use, so the first
+  read can fail silently without a connection (the note is then left empty).
 - Expired photos are purged whenever the app opens or returns to the
   foreground, with an OS-scheduled background task as a best-effort extra.
 
