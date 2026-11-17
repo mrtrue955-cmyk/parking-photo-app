@@ -31,20 +31,60 @@ test('isExpired is true only when expiresAt has passed', () => {
   expect(isExpired({ ...base, expiresAt: null }, 10 ** 15)).toBe(false);
 });
 
-test('buildReminders groups records expiring the same day and skips past or kept ones', () => {
-  // Given two records expiring on day 10, one on day 20, one kept, one whose reminder time already passed
+function localId(ms: number): string {
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `reminder-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+test('buildReminders merges triggers on the same local day with a stable local-date id', () => {
+  // Given two records whose reminder triggers fall on the same LOCAL day (00:30 and 23:30)
+  const t1 = new Date(2026, 0, 10, 0, 30).getTime();
+  const t2 = new Date(2026, 0, 10, 23, 30).getTime();
   const records: ParkingRecord[] = [
-    { ...base, id: '1', expiresAt: 10 * DAY_MS + 1000 },
-    { ...base, id: '2', expiresAt: 10 * DAY_MS + 2000 },
-    { ...base, id: '3', expiresAt: 20 * DAY_MS },
-    { ...base, id: '4', expiresAt: null },
-    { ...base, id: '5', expiresAt: DAY_MS / 2 },
+    { ...base, id: '1', expiresAt: t2 + DAY_MS },
+    { ...base, id: '2', expiresAt: t1 + DAY_MS },
   ];
-  // When building reminders at time 0
-  const result = buildReminders(records, 0);
-  // Then same-day records are merged (earliest trigger time), ordered by time
+  // When building reminders well before both
+  const result = buildReminders(records, new Date(2026, 0, 1).getTime());
+  // Then they merge into one reminder at the earliest trigger, with the local-date id
+  expect(result).toEqual([{ id: 'reminder-2026-01-10', triggerAt: t1, count: 2 }]);
+  expect(result[0].id).toBe(localId(t1));
+});
+
+test('buildReminders keeps triggers just before and after local midnight separate', () => {
+  // Given triggers at 23:59 on Jan 10 and 00:01 on Jan 11 (local)
+  const before = new Date(2026, 0, 10, 23, 59).getTime();
+  const after = new Date(2026, 0, 11, 0, 1).getTime();
+  const records: ParkingRecord[] = [
+    { ...base, id: '1', expiresAt: after + DAY_MS },
+    { ...base, id: '2', expiresAt: before + DAY_MS },
+  ];
+  // When building reminders
+  const result = buildReminders(records, new Date(2026, 0, 1).getTime());
+  // Then they stay as two reminders, ordered by time, with distinct ids
   expect(result).toEqual([
-    { triggerAt: 9 * DAY_MS + 1000, count: 2 },
-    { triggerAt: 19 * DAY_MS, count: 1 },
+    { id: 'reminder-2026-01-10', triggerAt: before, count: 1 },
+    { id: 'reminder-2026-01-11', triggerAt: after, count: 1 },
+  ]);
+});
+
+test('buildReminders skips kept records and triggers that already passed, ordered by time', () => {
+  // Given a later record, an earlier record, a kept one, and one whose trigger is <= now
+  const now = new Date(2026, 0, 1, 12, 0).getTime();
+  const early = new Date(2026, 0, 5, 9, 0).getTime();
+  const late = new Date(2026, 0, 20, 9, 0).getTime();
+  const records: ParkingRecord[] = [
+    { ...base, id: '1', expiresAt: late + DAY_MS },
+    { ...base, id: '2', expiresAt: early + DAY_MS },
+    { ...base, id: '3', expiresAt: null },
+    { ...base, id: '4', expiresAt: now + DAY_MS },
+  ];
+  // When building reminders
+  const result = buildReminders(records, now);
+  // Then only the two future triggers remain, ascending
+  expect(result).toEqual([
+    { id: localId(early), triggerAt: early, count: 1 },
+    { id: localId(late), triggerAt: late, count: 1 },
   ]);
 });
