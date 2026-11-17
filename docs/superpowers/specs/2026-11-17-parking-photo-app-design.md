@@ -56,7 +56,7 @@ Bảng `parking_records` (SQLite):
 - GPS lấy ngầm lúc chụp. Nếu thiếu GPS, vẫn lưu ảnh và ghi chú, ẩn nút dẫn đường.
 
 **Chi tiết ảnh**
-- Ảnh phóng to, ghi chú, bản đồ nhỏ, ngày hết hạn.
+- Ảnh phóng to, ghi chú, toạ độ và nút **Mở bản đồ**, ngày hết hạn.
 - **Giữ lại**: ghi ảnh vào Gallery rồi gỡ bản ghi khỏi cơ chế tự xoá.
 - **Xoá ngay**.
 
