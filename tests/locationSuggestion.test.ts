@@ -1,4 +1,4 @@
-import { suggestLocationNote } from '../src/domain/locationSuggestion';
+import { suggestLocationNote, toTextLines } from '../src/domain/locationSuggestion';
 
 test('combines a level code line with a pillar keyword line', () => {
   // Given a pillar that shows "B2" on one line and "Cột 14" on another
@@ -91,4 +91,21 @@ test('returns null for empty input', () => {
   // Then nothing is suggested
   expect(suggestLocationNote([])).toBeNull();
   expect(suggestLocationNote(['', '   '])).toBeNull();
+});
+
+test('toTextLines splits blocks, handles CRLF, trims, drops empties and keeps order', () => {
+  // Given OCR blocks holding several lines, with CRLF, padding and blank pieces
+  // When splitting them into lines
+  // Then each non-empty trimmed line is returned in order
+  expect(toTextLines(['B2\nCột 14'])).toEqual(['B2', 'Cột 14']);
+  expect(toTextLines(['A\r\nB', '  C  \n\n  \nD'])).toEqual(['A', 'B', 'C', 'D']);
+  expect(toTextLines(['', '  '])).toEqual([]);
+});
+
+test('a multi-line OCR block still yields the level and pillar', () => {
+  // Given Android-style blocks whose lines are joined with newlines
+  // When splitting into lines before suggesting
+  // Then the standalone level code is kept
+  expect(suggestLocationNote(toTextLines(['B2\nCột 14']))).toBe('B2, cột 14');
+  expect(suggestLocationNote(toTextLines(['B2\nA14']))).toBe('B2, A14');
 });

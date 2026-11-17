@@ -9,11 +9,22 @@ const PILLAR_KEYWORD = /\b(?:COT|PILLAR|COLUMN)\s*[:.\-]?\s*([A-Z]?\s?-?\s?\d{1,
 const LEVEL_CODE = /^([BLP])\s?-?\s?(\d{1,2})$/;
 const PILLAR_CODE = /^([A-Z])\s?-?\s?(\d{1,3})$/;
 
+/**
+ * OCR blocks can hold several lines joined with newlines (Android returns whole blocks), but
+ * the rules work on single lines, so split, trim and drop empty pieces, keeping order.
+ */
+export function toTextLines(blocks: string[]): string[] {
+  return blocks
+    .flatMap((block) => block.split(/\r?\n/))
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+}
+
 function normalize(line: string): string {
   return line
     .replace(/[đĐ]/g, 'd')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toUpperCase()
     .replace(/\s+/g, ' ')
     .trim();
