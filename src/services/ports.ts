@@ -21,3 +21,11 @@ export interface PhotoFiles {
 export interface Gallery {
   save(uri: string): Promise<void>;
 }
+
+export class GalleryPermissionDeniedError extends Error {
+  constructor() {
+    super('Gallery permission denied');
+    this.name = 'GalleryPermissionDeniedError';
+    Object.setPrototypeOf(this, GalleryPermissionDeniedError.prototype);
+  }
+}

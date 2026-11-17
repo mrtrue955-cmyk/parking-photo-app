@@ -6,6 +6,7 @@ import { getParkingService, getPhotoFiles } from '../../container';
 import { daysLeft } from '../../domain/expiry';
 import { useParking } from '../../hooks/useParking';
 import { directionsUrl } from '../../native/directions';
+import { GalleryPermissionDeniedError } from '../../services/ports';
 
 export default function RecordDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,8 +27,12 @@ export default function RecordDetail() {
       await (await getParkingService()).keep(recordId);
       await refresh();
       Alert.alert('Đã giữ lại', 'Ảnh đã được lưu vào thư viện và sẽ không bị tự xoá.');
-    } catch {
-      Alert.alert('Không giữ lại được', 'Hãy cho phép app lưu ảnh vào thư viện trong Cài đặt.');
+    } catch (error) {
+      if (error instanceof GalleryPermissionDeniedError) {
+        Alert.alert('Không giữ lại được', 'Hãy cho phép app lưu ảnh vào thư viện trong Cài đặt.');
+      } else {
+        Alert.alert('Không giữ lại được', 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+      }
     } finally {
       setBusy(false);
     }

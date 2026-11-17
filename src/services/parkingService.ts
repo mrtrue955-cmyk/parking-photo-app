@@ -55,7 +55,7 @@ export function createParkingService({ repo, files, gallery, now, newId }: Deps)
 
     async keep(id: string): Promise<void> {
       const record = await repo.get(id);
-      if (!record) return;
+      if (!record || record.expiresAt === null) return;
       await gallery.save(files.uriFor(record.photoPath));
       await repo.setKept(id);
     },

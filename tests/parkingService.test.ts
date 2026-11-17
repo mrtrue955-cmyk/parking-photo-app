@@ -149,6 +149,18 @@ test('keep saves to the gallery and clears the expiry', async () => {
   expect((await repo.get(rec.id))!.expiresAt).toBeNull();
 });
 
+test('keep on an already-kept record does not save to the gallery again', async () => {
+  // Given a record that was already kept once
+  const { service, repo, gallery } = setup();
+  const rec = await service.capture(shot);
+  await service.keep(rec.id);
+  // When the user keeps it a second time (e.g. a double tap)
+  await service.keep(rec.id);
+  // Then the gallery has no duplicate and the record stays kept
+  expect(gallery.saved).toHaveLength(1);
+  expect((await repo.get(rec.id))!.expiresAt).toBeNull();
+});
+
 test('keep leaves the expiry untouched if saving to the gallery fails', async () => {
   // Given the gallery permission is denied
   const { service, repo, gallery } = setup();
