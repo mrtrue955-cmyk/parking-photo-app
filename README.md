@@ -21,7 +21,8 @@ The UI is in Vietnamese.
 
 ## Stack
 
-Expo SDK 58, React Native, expo-router, TypeScript, expo-sqlite, expo-camera,
+Expo SDK 58, React Native, expo-router (tabs), TypeScript, Be Vietnam Pro,
+`@expo/vector-icons`, expo-sqlite, expo-camera,
 expo-location, expo-notifications, expo-background-task.
 
 ## Getting started
@@ -39,7 +40,8 @@ used here.
 ## Project layout
 
 ```
-src/app/         expo-router screens (Home, Capture, Record detail)
+src/app/         expo-router screens: (tabs) group (Home, History, Capture) and Record detail
+src/ui/          theme, shared components (Text, tab bar, cards), fonts
 src/domain/      pure logic: expiry, current spot, reminders
 src/services/    parking service and its ports (repository, files, gallery)
 src/native/      adapters for SQLite, file system, gallery, GPS, notifications

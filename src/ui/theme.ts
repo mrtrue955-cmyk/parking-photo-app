@@ -16,8 +16,6 @@ export type Colors = {
   onChip: string;
   danger: string;
   dangerChip: string;
-  /** Legacy alias kept until the old screens are rewritten (removed in Task 10). */
-  bay: string;
 };
 
 export const colors: Record<ColorScheme, Colors> = {
@@ -35,7 +33,6 @@ export const colors: Record<ColorScheme, Colors> = {
     onChip: '#2B2724',
     danger: '#B3261E',
     dangerChip: '#FBE0DD',
-    bay: '#F5A524',
   },
   dark: {
     background: '#1E1B19',
@@ -51,7 +48,6 @@ export const colors: Record<ColorScheme, Colors> = {
     onChip: '#F5E3BE',
     danger: '#FF7A6B',
     dangerChip: '#4A2420',
-    bay: '#F5A524',
   },
 };
 
@@ -60,8 +56,6 @@ export const fontFamilies = {
   medium: 'BeVietnamPro_500Medium',
   semibold: 'BeVietnamPro_600SemiBold',
   bold: 'BeVietnamPro_700Bold',
-  /** Legacy alias kept until the old screens are rewritten (removed in Task 10). */
-  condensed: 'BeVietnamPro_700Bold',
 } as const;
 
 export const typography = {
@@ -71,9 +65,6 @@ export const typography = {
   body: { fontFamily: fontFamilies.regular, fontSize: 16, lineHeight: 24 },
   button: { fontFamily: fontFamilies.semibold, fontSize: 16, lineHeight: 24 },
   caption: { fontFamily: fontFamilies.medium, fontSize: 13, lineHeight: 18 },
-  /** Legacy aliases kept until the old screens are rewritten (removed in Task 10). */
-  sign: { fontFamily: fontFamilies.bold, fontSize: 30, lineHeight: 38 },
-  rowTitle: { fontFamily: fontFamilies.semibold, fontSize: 18, lineHeight: 24 },
 } satisfies Record<string, TextStyle>;
 
 export type TypographyVariant = keyof typeof typography;
