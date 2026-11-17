@@ -1,4 +1,4 @@
-import { buildReminders, computeExpiresAt, DAY_MS, daysLeft, isExpired } from '../src/domain/expiry';
+import { buildReminders, computeExpiresAt, DAY_MS, daysLeft, expiryFraction, isExpired, isExpiringSoon } from '../src/domain/expiry';
 import type { ParkingRecord } from '../src/domain/types';
 
 const base: ParkingRecord = {
@@ -87,4 +87,26 @@ test('buildReminders skips kept records and triggers that already passed, ordere
     { id: localId(early), triggerAt: early, count: 1 },
     { id: localId(late), triggerAt: late, count: 1 },
   ]);
+});
+
+test('expiryFraction is the share of the 30-day window that is left, clamped to 0..1', () => {
+  // Given a photo that was just taken, one half-way through, one expired, and a clock set before capture
+  const now = 1_000_000;
+  // When computing the fraction left
+  // Then it is 1, 0.5, 0 and 1 respectively (never outside 0..1)
+  expect(expiryFraction(now + 30 * DAY_MS, now)).toBe(1);
+  expect(expiryFraction(now + 15 * DAY_MS, now)).toBe(0.5);
+  expect(expiryFraction(now - DAY_MS, now)).toBe(0);
+  expect(expiryFraction(now + 40 * DAY_MS, now)).toBe(1);
+});
+
+test('isExpiringSoon is true only when fewer than 4 whole days are left', () => {
+  // Given expiry times 5, 4, 3 and 0 days away
+  const now = 1_000_000;
+  // When checking each
+  // Then only 3 days and 0 days count as expiring soon
+  expect(isExpiringSoon(now + 5 * DAY_MS, now)).toBe(false);
+  expect(isExpiringSoon(now + 4 * DAY_MS, now)).toBe(false);
+  expect(isExpiringSoon(now + 3 * DAY_MS, now)).toBe(true);
+  expect(isExpiringSoon(now, now)).toBe(true);
 });

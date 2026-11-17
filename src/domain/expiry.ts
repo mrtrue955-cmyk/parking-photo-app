@@ -43,3 +43,15 @@ export function buildReminders(records: ParkingRecord[], now: number): Reminder[
   }
   return [...buckets.values()].sort((a, b) => a.triggerAt - b.triggerAt);
 }
+
+export const EXPIRY_WARN_DAYS = 4;
+
+/** Share of the retention window that is left, from 0 (expired) to 1 (just taken). */
+export function expiryFraction(expiresAt: number, now: number): number {
+  const fraction = (expiresAt - now) / (RETENTION_DAYS * DAY_MS);
+  return Math.min(1, Math.max(0, fraction));
+}
+
+export function isExpiringSoon(expiresAt: number, now: number): boolean {
+  return daysLeft(expiresAt, now) < EXPIRY_WARN_DAYS;
+}
