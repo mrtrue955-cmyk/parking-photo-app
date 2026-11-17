@@ -22,18 +22,35 @@ async function handleParkedResponse(actionIdentifier: string, data: unknown): Pr
 
 /** Handles taps on the parked-spot notification buttons, once per response (also on cold start). */
 export function useParkedNotificationResponses(): void {
-  const response = Notifications.useLastNotificationResponse();
-  const handled = useRef<string | null>(null);
+  const handled = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!response) return;
-    if (response.notification.request.identifier !== PARKED_NOTIFICATION_ID) return;
-    const key = `${response.notification.date}:${response.actionIdentifier}`;
-    if (handled.current === key) return;
-    handled.current = key;
-    handleParkedResponse(
-      response.actionIdentifier,
-      response.notification.request.content.data,
-    ).catch((error) => console.warn('Failed to handle the parked notification response', error));
-  }, [response]);
+    // Not useLastNotificationResponse: it keeps its value when the identifier repeats,
+    // and every parked notification shares one identifier.
+    const handle = (response: Notifications.NotificationResponse) => {
+      if (response.notification.request.identifier !== PARKED_NOTIFICATION_ID) return;
+      const key = `${response.notification.date}:${response.actionIdentifier}`;
+      if (handled.current.has(key)) return;
+      handled.current.add(key);
+      handleParkedResponse(
+        response.actionIdentifier,
+        response.notification.request.content.data,
+      ).catch((error) => console.warn('Failed to handle the parked notification response', error));
+    };
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(handle);
+
+    // Cold start: the tap that launched the app arrived before the listener existed.
+    const initial = Notifications.getLastNotificationResponse();
+    if (initial) {
+      handle(initial);
+      try {
+        Notifications.clearLastNotificationResponse();
+      } catch (error) {
+        console.warn('Failed to clear the last notification response', error);
+      }
+    }
+
+    return () => subscription.remove();
+  }, []);
 }
