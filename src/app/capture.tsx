@@ -3,15 +3,30 @@ import { Image } from 'expo-image';
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { getParkingService } from '../container';
 import { getCoords } from '../native/location';
 import { ensureNotificationPermission } from '../native/reminders';
+import { BayFrame } from '../ui/components/BayFrame';
+import { PrimaryButton, TextButton } from '../ui/components/Button';
+import { Text } from '../ui/components/Text';
+import { fontFamilies, radius, spacing } from '../ui/theme';
+import { useTheme } from '../ui/useTheme';
 
 type Coords = { lat: number; lng: number } | null;
 
 export default function CaptureScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -19,12 +34,12 @@ export default function CaptureScreen() {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
 
-  if (!permission) return <ActivityIndicator style={styles.center} />;
+  if (!permission) return <ActivityIndicator style={styles.center} color={colors.primary} />;
   if (!permission.granted) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
         <Text style={styles.message}>App cần quyền camera để chụp vị trí xe.</Text>
-        <Button title="Cho phép camera" onPress={requestPermission} />
+        <PrimaryButton title="Cho phép camera" onPress={requestPermission} />
       </View>
     );
   }
@@ -94,38 +109,76 @@ export default function CaptureScreen() {
 
   if (photoUri) {
     return (
-      <View style={styles.container}>
-        <Image source={{ uri: photoUri }} style={styles.preview} contentFit="cover" />
-        <Text style={styles.gps}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[styles.container, { backgroundColor: colors.background }]}
+      >
+        <Image source={{ uri: photoUri }} style={styles.preview} contentFit="cover" accessible accessibilityLabel="Ảnh vừa chụp" />
+        <Text variant="caption" muted>
           {coords ? 'Đã lấy vị trí GPS' : 'Không lấy được GPS, sẽ không có dẫn đường'}
         </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text },
+          ]}
           placeholder="Ghi chú (ví dụ: B2, cột 14)"
+          placeholderTextColor={colors.textMuted}
+          accessibilityLabel="Ghi chú vị trí xe"
           value={note}
           onChangeText={setNote}
           maxLength={80}
         />
-        <Button title={busy ? 'Đang lưu...' : 'Lưu'} onPress={save} disabled={busy} />
-        <Button title="Chụp lại" onPress={() => setPhotoUri(null)} disabled={busy} />
-      </View>
+        <PrimaryButton title={busy ? 'Đang lưu...' : 'Lưu'} onPress={save} disabled={busy} />
+        <TextButton title="Chụp lại" onPress={() => setPhotoUri(null)} disabled={busy} />
+      </KeyboardAvoidingView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing="back" />
-      <Button title={busy ? 'Đang chụp...' : 'Chụp'} onPress={takePhoto} disabled={busy} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <BayFrame style={styles.camera}>
+        <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
+      </BayFrame>
+      <View style={styles.shutterRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Chụp"
+          accessibilityState={{ disabled: busy }}
+          disabled={busy}
+          onPress={takePhoto}
+          style={[styles.shutterOuter, { borderColor: colors.text, opacity: busy ? 0.5 : 1 }]}
+        >
+          <View style={[styles.shutterInner, { backgroundColor: colors.text }]} />
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 12 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
+  container: { flex: 1, padding: spacing.screen, gap: spacing.md },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.lg },
   message: { textAlign: 'center' },
-  camera: { flex: 1, borderRadius: 12, overflow: 'hidden' },
-  preview: { flex: 1, borderRadius: 12 },
-  gps: { color: '#666' },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12 },
+  camera: { flex: 1, borderRadius: radius.card, overflow: 'hidden' },
+  preview: { flex: 1, borderRadius: radius.card },
+  input: {
+    borderWidth: 1,
+    borderRadius: radius.card,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    minHeight: 48,
+    fontFamily: fontFamilies.regular,
+    fontSize: 17,
+  },
+  shutterRow: { alignItems: 'center', paddingBottom: spacing.sm },
+  shutterOuter: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shutterInner: { width: 56, height: 56, borderRadius: 28 },
 });
