@@ -18,6 +18,7 @@ import { getParkingService } from '../container';
 import type { ParkingRecord } from '../domain/types';
 import { getCoords } from '../native/location';
 import { showParkedNotification } from '../native/parkedNotification';
+import { suggestNoteFromPhoto } from '../native/photoSuggestion';
 import { ensureNotificationPermission } from '../native/reminders';
 import { PrimaryButton, SecondaryButton } from '../ui/components/Button';
 import { useScreenHeaderHeight } from '../ui/components/ScreenHeader';
@@ -38,6 +39,9 @@ export default function CaptureScreen() {
   const [coords, setCoords] = useState<Coords>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [suggestionStatus, setSuggestionStatus] = useState<'idle' | 'reading' | 'suggested'>('idle');
+  const suggestionRequest = useRef(0);
+  const noteEdited = useRef(false);
 
   if (!permission) {
     return (
@@ -55,6 +59,36 @@ export default function CaptureScreen() {
     );
   }
 
+  function suggestForPhoto(uri: string) {
+    const requestId = ++suggestionRequest.current;
+    setSuggestionStatus('reading');
+    suggestNoteFromPhoto(uri).then((suggestion) => {
+      // Ignore results for an older photo or after a retake/save.
+      if (requestId !== suggestionRequest.current) return;
+      if (suggestion && !noteEdited.current) {
+        setNote(suggestion);
+        setSuggestionStatus('suggested');
+      } else {
+        setSuggestionStatus('idle');
+      }
+    });
+  }
+
+  function retake() {
+    suggestionRequest.current += 1;
+    if (suggestionStatus === 'suggested') {
+      // The note is only an auto-filled suggestion: clear it.
+      setNote('');
+      noteEdited.current = false;
+    } else {
+      // Keep the user's own text and keep treating it as edited; an empty
+      // field starts the next photo fresh so it can be auto-filled.
+      noteEdited.current = note.length > 0;
+    }
+    setSuggestionStatus('idle');
+    setPhotoUri(null);
+  }
+
   async function takePhoto() {
     setBusy(true);
     try {
@@ -62,6 +96,7 @@ export default function CaptureScreen() {
       const photo = await cameraRef.current?.takePictureAsync({ quality: 0.7 });
       if (!photo) return;
       setPhotoUri(photo.uri);
+      suggestForPhoto(photo.uri);
       setCoords(await coordsPromise);
     } catch {
       Alert.alert('Không chụp được ảnh', 'Vui lòng thử lại.');
@@ -149,11 +184,20 @@ export default function CaptureScreen() {
             selectionColor={colors.primary}
             accessibilityLabel="Ghi chú vị trí xe"
             value={note}
-            onChangeText={setNote}
+            onChangeText={(text) => {
+              noteEdited.current = true;
+              setNote(text);
+              setSuggestionStatus('idle');
+            }}
             maxLength={80}
           />
+          {suggestionStatus !== 'idle' ? (
+            <Text variant="caption" muted accessibilityLiveRegion="polite">
+              {suggestionStatus === 'reading' ? 'Đang đọc ảnh...' : 'Gợi ý từ ảnh, bạn có thể sửa'}
+            </Text>
+          ) : null}
           <PrimaryButton title={busy ? 'Đang lưu...' : 'Lưu'} onPress={save} disabled={busy} />
-          <SecondaryButton title="Chụp lại" onPress={() => setPhotoUri(null)} disabled={busy} />
+          <SecondaryButton title="Chụp lại" onPress={retake} disabled={busy} />
         </View>
       </KeyboardAvoidingView>
     );

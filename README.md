@@ -14,6 +14,8 @@ on the device: there is no backend and no network code.
 - Each photo is deleted 30 days after it was taken. A reminder notification is
   scheduled the day before.
 - "Giữ lại" (keep) saves a photo to the Gallery and exempts it from deletion.
+- Suggests the location note from the photo (level, zone, pillar number) using
+  on-device text recognition; the photo never leaves the phone.
 - Expired photos are purged whenever the app opens or returns to the
   foreground, with an OS-scheduled background task as a best-effort extra.
 
