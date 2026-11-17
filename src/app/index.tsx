@@ -52,7 +52,11 @@ export default function Home() {
       {current.lat !== null && current.lng !== null ? (
         <Button
           title="Dẫn đường về xe"
-          onPress={() => Linking.openURL(directionsUrl(current.lat!, current.lng!))}
+          onPress={() =>
+            Linking.openURL(directionsUrl(current.lat!, current.lng!)).catch(() =>
+              Alert.alert('Không mở được bản đồ', 'Hãy cài ứng dụng bản đồ rồi thử lại.'),
+            )
+          }
         />
       ) : null}
       <Button title="Đã lấy xe" onPress={collect} />
