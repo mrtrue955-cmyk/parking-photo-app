@@ -27,7 +27,7 @@ Bảng `parking_records` (SQLite):
 | Trường | Ghi chú |
 | --- | --- |
 | `id` | khoá chính |
-| `photoPath` | đường dẫn file ảnh trong thư mục app |
+| `photoPath` | tên file ảnh (đường dẫn thư mục app được ghép lúc đọc, vì đường dẫn tuyệt đối có thể đổi trên iOS) |
 | `lat`, `lng` | có thể trống nếu không có quyền vị trí hoặc không lấy được |
 | `note` | ghi chú ngắn, tuỳ chọn |
 | `createdAt` | thời điểm chụp |
