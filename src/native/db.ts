@@ -20,6 +20,9 @@ async function open(): Promise<SQLite.SQLiteDatabase> {
 }
 
 export function getDb(): Promise<SQLite.SQLiteDatabase> {
-  dbPromise ??= open();
+  dbPromise ??= open().catch((error) => {
+    dbPromise = null;
+    throw error;
+  });
   return dbPromise;
 }

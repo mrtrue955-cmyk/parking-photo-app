@@ -7,7 +7,8 @@ import { createParkingService, type ParkingService } from './services/parkingSer
 let servicePromise: Promise<ParkingService> | null = null;
 
 export function getParkingService(): Promise<ParkingService> {
-  servicePromise ??= getDb().then((db) =>
+  servicePromise ??= getDb()
+    .then((db) =>
     createParkingService({
       repo: createSqliteRepository(db),
       files: photoFiles,
@@ -15,7 +16,11 @@ export function getParkingService(): Promise<ParkingService> {
       now: () => Date.now(),
       newId: () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     }),
-  );
+    )
+    .catch((error) => {
+      servicePromise = null;
+      throw error;
+    });
   return servicePromise;
 }
 
