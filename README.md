@@ -1,56 +1,52 @@
-# Welcome to your Expo app 👋
+# Parking Photo App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Take a photo of where you parked, and let it delete itself after 30 days.
 
-## Get started
+Photos are stored in the app's private storage, never in the Gallery, so
+supermarket pillar photos stop piling up in your camera roll. Everything stays
+on the device: there is no backend and no network code.
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- Capture a parking spot with a photo, GPS position and a short note.
+- Home shows the current spot (with a "navigate back to the car" button and
+  "I got my car") and a history of earlier spots.
+- Each photo is deleted 30 days after it was taken. A reminder notification is
+  scheduled the day before.
+- "Giữ lại" (keep) saves a photo to the Gallery and exempts it from deletion.
+- Expired photos are purged whenever the app opens or returns to the
+  foreground, with an OS-scheduled background task as a best-effort extra.
 
-2. Start the app
+The UI is in Vietnamese.
 
-   ```bash
-   npx expo start
-   ```
+## Stack
 
-In the output, you'll find options to open the app in a
+Expo SDK 58, React Native, expo-router, TypeScript, expo-sqlite, expo-camera,
+expo-location, expo-notifications, expo-background-task.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Getting started
 
 ```bash
-npm run reset-project
+npm install
+npm test                       # unit tests (domain logic and parking service)
+npx tsc --noEmit               # typecheck
+npx expo run:ios --device      # or: npx expo run:android
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+The app needs a development build; Expo Go does not include every native module
+used here.
 
-### Other setup steps
+## Project layout
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```
+src/app/         expo-router screens (Home, Capture, Record detail)
+src/domain/      pure logic: expiry, current spot, reminders
+src/services/    parking service and its ports (repository, files, gallery)
+src/native/      adapters for SQLite, file system, gallery, GPS, notifications
+src/background/  background purge task
+src/hooks/       useParking
+tests/           Jest tests (the service is tested against in-memory fakes)
+docs/superpowers design spec and implementation plan
+```
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Design: `docs/superpowers/specs/2026-11-17-parking-photo-app-design.md`.
