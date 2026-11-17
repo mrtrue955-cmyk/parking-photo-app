@@ -60,6 +60,8 @@ export default function CaptureScreen() {
   }
 
   function suggestForPhoto(uri: string) {
+    // The user already typed a note: skip the read entirely.
+    if (noteEdited.current) return;
     const requestId = ++suggestionRequest.current;
     setSuggestionStatus('reading');
     suggestNoteFromPhoto(uri).then((suggestion) => {
@@ -129,6 +131,8 @@ export default function CaptureScreen() {
 
   async function save() {
     if (!photoUri) return;
+    // A late suggestion must not fill the field while the save alert is open.
+    suggestionRequest.current += 1;
     setBusy(true);
     let saved = false;
     let savedRecord: ParkingRecord | null = null;
