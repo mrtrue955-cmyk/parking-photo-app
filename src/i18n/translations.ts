@@ -161,6 +161,10 @@ const vi = {
   },
   'settings.data.errorTitle': 'Không xoá được',
 
+  'widget.emptyTitle': 'Chưa lưu vị trí',
+  'widget.emptyHint': 'Mở app để chụp cột',
+  'widget.spotFallback': 'Xe đang đậu',
+
   'notif.parked.title': 'Vị trí xe của bạn',
   'notif.parked.bodyWithNote': 'Xe bạn đang đậu ở {note}',
   'notif.parked.bodyNoNote': 'Bạn đã đậu xe',
@@ -335,6 +339,10 @@ const en: Record<keyof typeof vi, TranslationValue> = {
     other: '{count} spots were deleted from this device.',
   },
   'settings.data.errorTitle': 'Could not delete the data',
+
+  'widget.emptyTitle': 'No spot saved',
+  'widget.emptyHint': 'Open the app to save one',
+  'widget.spotFallback': 'Car parked',
 
   'notif.parked.title': 'Your parking spot',
   'notif.parked.bodyWithNote': 'Your car is parked at {note}',

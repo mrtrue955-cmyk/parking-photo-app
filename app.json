@@ -64,7 +64,9 @@
         {
           "photosPermission": "Cho phép app truy cập ảnh.",
           "savePhotosPermission": "Cho phép app lưu ảnh bạn chọn giữ lại vào thư viện.",
-          "granularPermissions": ["photo"]
+          "granularPermissions": [
+            "photo"
+          ]
         }
       ],
       [
@@ -74,7 +76,28 @@
         }
       ],
       "expo-background-task",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "ParkedSpot",
+              "displayName": "Cột Xe",
+              "description": "Vị trí đỗ xe và hạn tự xoá ảnh / your parked spot and photo expiry",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium",
+                  "accessoryRectangular",
+                  "accessoryInline"
+                ],
+                "initialLayout": "./src/widgets/parkedSpot.tsx"
+              }
+            }
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -2,6 +2,7 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useI18n } from '../i18n';
+import { parkedWidgetProps, syncParkedWidget } from '../widgets/sync';
 import { getParkingService } from '../container';
 import { pickCurrent } from '../domain/current';
 import type { ParkingRecord } from '../domain/types';
@@ -39,6 +40,7 @@ export function useParking() {
     }
     if (requestId !== latestRequest.current) return;
     const current = pickCurrent(list);
+    syncParkedWidget(parkedWidgetProps(current, Date.now(), locale));
     if (!current) await dismissParkedNotification();
     try {
       const settings = await (await getParkingService()).getSettings();
