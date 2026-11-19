@@ -44,3 +44,23 @@ test('canQuickEdit only for empty or structured notes', () => {
   expect(canQuickEdit('cột 9')).toBe(true);
   expect(canQuickEdit('chỗ quen thuộc')).toBe(false);
 });
+
+test('parses the level of the active style', () => {
+  expect(parseNote('2F · cột 7', 'F').level).toBe('2F');
+  expect(parseNote('P1 · cột 7', 'P').level).toBe('P1');
+  expect(parseNote('-2 · cột 7', 'N').level).toBe('-2');
+});
+
+test('a bare number is only a level when the style says so', () => {
+  expect(parseNote('2 · cột 9', 'G').level).toBe('2');
+  expect(parseNote('2 · cột 9', 'B').level).toBeNull();
+});
+
+test('setLevel replaces the level of another style in place', () => {
+  expect(setLevel('1F · cột 45', '3F', 'F')).toBe('3F · cột 45');
+  expect(setLevel('-1 · cột 45', '-3', 'N')).toBe('-3 · cột 45');
+});
+
+test('setLevel prepends in the active style when there is none', () => {
+  expect(setLevel('cột 45', 'P2', 'P')).toBe('P2 · cột 45');
+});

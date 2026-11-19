@@ -44,3 +44,12 @@ test('resolveLocale follows the setting, then the device language', () => {
   expect(resolveLocale('system', 'en-GB')).toBe('en');
   expect(resolveLocale('system', null)).toBe('en');
 });
+
+test('the note placeholder shows the active floor style', () => {
+  expect(translate('vi', 'capture.notePlaceholder', { level: '2F' })).toBe(
+    'Ghi chú (ví dụ: 2F, cột 14)',
+  );
+  expect(translate('en', 'capture.notePlaceholder', { level: '2F' })).toBe(
+    'Note (e.g. 2F, pillar 14)',
+  );
+});

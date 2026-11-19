@@ -1,3 +1,4 @@
+import { formatLevelByStyle, DEFAULT_LEVEL_STYLE, type LevelStyle } from './levelStyle';
 import { translate } from '../i18n/translate';
 import type { Locale } from '../i18n/translations';
 const MAX_LENGTH = 80;
@@ -80,16 +81,28 @@ function compactCode(code: string): string {
   return code.replace(/[\s-]/g, '');
 }
 
-function formatLevel(captured: string, basement: boolean, locale: Locale): string {
+function levelLabel(
+  captured: string,
+  basement: boolean,
+  locale: Locale,
+  style: LevelStyle,
+): string {
+  // "B2"/"P1"/"L3" already carry their convention: keep them verbatim.
   if (/^[BLP]/.test(captured)) return captured;
-  return basement ? `B${captured}` : translate(locale, 'note.level', { level: captured });
+  if (basement) return `B${captured}`;
+  if (style === 'B') return translate(locale, 'note.level', { level: captured });
+  return formatLevelByStyle(style, Number(captured));
 }
 
 /**
  * Turns the text lines recognized in a parking photo into a note like "B2, cột 14".
  * Favors precision over recall; returns null when nothing looks like a location.
  */
-export function suggestLocationNote(lines: string[], locale: Locale = 'vi'): string | null {
+export function suggestLocationNote(
+  lines: string[],
+  locale: Locale = 'vi',
+  levelStyle: LevelStyle = DEFAULT_LEVEL_STYLE,
+): string | null {
   let level: string | null = null;
   let zone: string | null = null;
   let pillar: string | null = null;
@@ -107,7 +120,8 @@ export function suggestLocationNote(lines: string[], locale: Locale = 'vi'): str
     if (levelMatch) {
       keywordMatched = true;
       levelKeywordMatched = true;
-      if (level === null) level = formatLevel(levelMatch[2], levelMatch[1] !== undefined, locale);
+      if (level === null)
+        level = levelLabel(levelMatch[2], levelMatch[1] !== undefined, locale, levelStyle);
     } else if (basementMatch) {
       keywordMatched = true;
       levelKeywordMatched = true;

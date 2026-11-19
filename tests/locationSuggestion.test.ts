@@ -293,3 +293,10 @@ test('stays silent on the real noise photos', () => {
   expect(suggestLocationNote(['LỐI VÀO', 'SAKURA STATION', 'SERENE', '640 × 480'])).toBeNull();
   expect(suggestLocationNote(['MEGATECH'])).toBeNull();
 });
+
+test('suggests the floor in the configured regional style', () => {
+  const lines = ['TẦNG 2', 'CỘT 14'];
+  expect(suggestLocationNote(lines, 'vi', 'F')).toBe('2F, cột 14');
+  expect(suggestLocationNote(lines, 'vi', 'N')).toBe('-2, cột 14');
+  expect(suggestLocationNote(lines, 'vi', 'B')).toBe('Tầng 2, cột 14');
+});

@@ -1,12 +1,16 @@
 export const RETENTION_OPTIONS = [7, 30, 60] as const;
 export type RetentionDays = (typeof RETENTION_OPTIONS)[number];
 
+import { DEFAULT_LEVEL_STYLE, LEVEL_STYLES, type LevelStyle } from './levelStyle';
+
 export const LANGUAGES = ['system', 'vi', 'en'] as const;
 export type Language = (typeof LANGUAGES)[number];
 
 export type AppSettings = {
   /** UI and notification language; "system" follows the device. */
   language: Language;
+  /** How floor labels are written: B1, 1F, P1, L1, G, or -1. */
+  levelStyle: LevelStyle;
   /** How long a photo is kept before it is deleted automatically. */
   retentionDays: RetentionDays;
   /** Whether the app schedules "photo will be deleted tomorrow" reminders. */
@@ -17,6 +21,7 @@ export type AppSettings = {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   language: 'system',
+  levelStyle: DEFAULT_LEVEL_STYLE,
   retentionDays: 30,
   remindersEnabled: true,
   geofenceEnabled: false,
@@ -33,6 +38,9 @@ export function parseSettings(raw: unknown): AppSettings {
     language: LANGUAGES.includes(value.language as Language)
       ? (value.language as Language)
       : DEFAULT_SETTINGS.language,
+    levelStyle: LEVEL_STYLES.includes(value.levelStyle as LevelStyle)
+      ? (value.levelStyle as LevelStyle)
+      : DEFAULT_SETTINGS.levelStyle,
     retentionDays: isRetentionDays(value.retentionDays)
       ? value.retentionDays
       : DEFAULT_SETTINGS.retentionDays,

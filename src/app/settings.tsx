@@ -1,10 +1,19 @@
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService } from '../container';
 import { pickCurrent } from '../domain/current';
+import { LEVEL_STYLES, LEVEL_STYLE_EXAMPLES, type LevelStyle } from '../domain/levelStyle';
 import { RETENTION_OPTIONS, type Language, type RetentionDays } from '../domain/settings';
 import { useParking } from '../hooks/useParking';
 import { useSettings } from '../hooks/useSettings';
@@ -146,6 +155,38 @@ export default function SettingsScreen() {
       </View>
 
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Text variant="heading">{t('settings.levelStyle.title')}</Text>
+        <Text variant="caption" muted>
+          {t('settings.levelStyle.body')}
+        </Text>
+        <View style={styles.styleRow}>
+          {LEVEL_STYLES.map((style) => {
+            const active = settings.levelStyle === style;
+            return (
+              <Pressable
+                key={style}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={LEVEL_STYLE_EXAMPLES[style]}
+                onPress={() => update({ levelStyle: style as LevelStyle })}
+                style={[
+                  styles.styleChip,
+                  {
+                    backgroundColor: active ? colors.primary : colors.surfaceAlt,
+                    borderColor: active ? colors.primary : colors.border,
+                  },
+                ]}
+              >
+                <Text variant="caption" style={{ color: active ? colors.onPrimary : colors.text }}>
+                  {LEVEL_STYLE_EXAMPLES[style]}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Text variant="heading">{t('settings.reminders.title')}</Text>
         <View style={styles.row}>
           <View style={styles.rowText}>
@@ -205,6 +246,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.xs },
+  styleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.xs },
+  styleChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
   rowText: { flex: 1, gap: 2 },
   danger: { alignSelf: 'flex-start', marginTop: spacing.xs },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },

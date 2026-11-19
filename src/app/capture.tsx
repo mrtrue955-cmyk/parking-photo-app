@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService } from '../container';
+import { levelOptions } from '../domain/levelStyle';
 import { canQuickEdit, parseNote, setLevel, setPillar } from '../domain/noteEditor';
 import type { ParkingRecord } from '../domain/types';
 import { getCoords } from '../native/location';
@@ -28,6 +29,7 @@ import { PrimaryButton, SecondaryButton } from '../ui/components/Button';
 import { impactFeedback, successFeedback, tapFeedback } from '../ui/haptics';
 import { useI18n } from '../i18n';
 import type { TranslationKey } from '../i18n/translations';
+import { useSettings } from '../hooks/useSettings';
 import { useScreenHeaderHeight } from '../ui/components/ScreenHeader';
 import { Text } from '../ui/components/Text';
 import { fontFamilies, radius, spacing } from '../ui/theme';
@@ -35,8 +37,6 @@ import { useTheme } from '../ui/useTheme';
 
 type Coords = { lat: number; lng: number } | null;
 type SuggestionStatus = 'idle' | 'reading' | 'suggested';
-
-const LEVELS = ['B1', 'B2', 'B3'] as const;
 
 const STATUS_LABEL: Record<SuggestionStatus, TranslationKey | null> = {
   idle: null,
@@ -48,6 +48,8 @@ export default function CaptureScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const { t, locale } = useI18n();
+  const { settings } = useSettings();
+  const levelStyle = settings?.levelStyle ?? 'B';
   const headerHeight = useScreenHeaderHeight();
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
@@ -101,7 +103,7 @@ export default function CaptureScreen() {
     if (noteEdited.current) return;
     const requestId = ++suggestionRequest.current;
     setSuggestionStatus('reading');
-    suggestNoteFromPhoto(uri, locale).then((suggestion) => {
+    suggestNoteFromPhoto(uri, locale, levelStyle).then((suggestion) => {
       // Ignore results for an older photo or after a retake/save.
       if (requestId !== suggestionRequest.current) return;
       if (suggestion && !noteEdited.current) {
@@ -206,7 +208,7 @@ export default function CaptureScreen() {
   function chooseLevel(level: string) {
     tapFeedback();
     setSuggestionStatus('idle');
-    editNote(setLevel(note, level));
+    editNote(setLevel(note, level, levelStyle));
   }
 
   function stepPillar(delta: number) {
@@ -218,7 +220,7 @@ export default function CaptureScreen() {
   }
 
   if (photoUri) {
-    const parts = parseNote(note);
+    const parts = parseNote(note, levelStyle);
     const statusLabel = STATUS_LABEL[suggestionStatus];
     return (
       <KeyboardAvoidingView
@@ -284,10 +286,10 @@ export default function CaptureScreen() {
               </Text>
             </View>
 
-            {canQuickEdit(note) ? (
+            {canQuickEdit(note, levelStyle) ? (
               <>
                 <View style={styles.levelRow}>
-                  {LEVELS.map((level) => {
+                  {levelOptions(levelStyle).map((level) => {
                     const active = parts.level === level;
                     return (
                       <Pressable
@@ -349,7 +351,7 @@ export default function CaptureScreen() {
                   color: colors.text,
                 },
               ]}
-              placeholder={t('capture.notePlaceholder')}
+              placeholder={t('capture.notePlaceholder', { level: levelOptions(levelStyle)[1] })}
               placeholderTextColor={colors.textMuted}
               cursorColor={colors.accent}
               selectionColor={colors.primary}
