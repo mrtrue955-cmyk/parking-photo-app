@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -65,9 +66,27 @@ export default function CaptureScreen() {
   }
   if (!permission.granted) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Text style={styles.message}>App cần quyền camera để chụp vị trí xe.</Text>
-        <PrimaryButton title="Cho phép camera" onPress={requestPermission} />
+      <View style={[styles.priming, { backgroundColor: colors.background }]}>
+        <View style={[styles.primingIcon, { backgroundColor: colors.chip }]}>
+          <Ionicons name="camera" size={30} color={colors.onChip} />
+        </View>
+        <Text variant="heading" style={styles.message}>
+          Cần quyền camera
+        </Text>
+        <Text muted style={styles.message}>
+          App dùng camera để chụp cột xe và đọc số cột. Ảnh chỉ nằm trên máy này, không tải lên
+          mạng.
+        </Text>
+        {permission.canAskAgain ? (
+          <PrimaryButton title="Tiếp tục" onPress={requestPermission} />
+        ) : (
+          <>
+            <Text variant="caption" muted style={styles.message}>
+              Quyền camera đang bị tắt trong Cài đặt của máy.
+            </Text>
+            <PrimaryButton title="Mở Cài đặt" onPress={() => Linking.openSettings()} />
+          </>
+        )}
       </View>
     );
   }
@@ -395,6 +414,20 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   message: { textAlign: 'center' },
+  priming: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
+  primingIcon: {
+    width: 68,
+    height: 68,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   camera: { flex: 1, borderRadius: radius.card, overflow: 'hidden', backgroundColor: '#2B2724' },
   brackets: { position: 'absolute', top: 18, right: 18, bottom: 18, left: 18 },
   corner: { position: 'absolute', width: 26, height: 26, borderColor: 'rgba(255,255,255,0.9)' },

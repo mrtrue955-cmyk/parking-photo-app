@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { registerPurgeTask } from '../background/purgeTask';
 import { useParkedNotificationResponses } from '../hooks/useParkedNotificationResponses';
+import '../native/geofence';
 import '../native/notificationSetup';
 import { registerParkedCategories } from '../native/parkedNotification';
 import { ScreenHeader } from '../ui/components/ScreenHeader';
@@ -48,6 +49,10 @@ export default function RootLayout() {
         <Stack.Screen
           name="capture"
           options={{ headerShown: true, header: () => <ScreenHeader title="Chụp vị trí xe" /> }}
+        />
+        <Stack.Screen
+          name="settings"
+          options={{ headerShown: true, header: () => <ScreenHeader title="Cài đặt" /> }}
         />
         <Stack.Screen
           name="record/[id]"

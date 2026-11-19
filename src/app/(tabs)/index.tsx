@@ -6,7 +6,7 @@ import { historyOf, pickCurrent } from '../../domain/current';
 import { useParking } from '../../hooks/useParking';
 import { directionsUrl } from '../../native/directions';
 import { dismissParkedNotification } from '../../native/parkedNotification';
-import { TextButton } from '../../ui/components/Button';
+import { IconButton, TextButton } from '../../ui/components/Button';
 import { CaptureCta } from '../../ui/components/CaptureCta';
 import { EmptyState } from '../../ui/components/EmptyState';
 import { HistoryCard } from '../../ui/components/HistoryCard';
@@ -53,7 +53,14 @@ export default function Home() {
         { paddingTop: insets.top + spacing.md, paddingBottom: bottomSpace },
       ]}
     >
-      <Text variant="title">Xe của tôi</Text>
+      <View style={styles.headerRow}>
+        <Text variant="title">Xe của tôi</Text>
+        <IconButton
+          icon="settings-outline"
+          accessibilityLabel="Cài đặt"
+          onPress={() => router.push('/settings')}
+        />
+      </View>
       {current ? (
         <SpotCard
           record={current}
@@ -105,6 +112,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { paddingHorizontal: spacing.screen, gap: spacing.md },
   contentFill: { flexGrow: 1 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   emptyBlock: { flex: 1, justifyContent: 'center', gap: spacing.sm },
   spacer: { flex: 0 },
   section: { gap: spacing.sm },

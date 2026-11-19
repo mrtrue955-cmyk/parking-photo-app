@@ -1,12 +1,14 @@
 import { pickCurrent } from '../domain/current';
-import { computeExpiresAt, isExpired } from '../domain/expiry';
+import { computeExpiresAt, DAY_MS, isExpired } from '../domain/expiry';
+import { parseSettings, type AppSettings } from '../domain/settings';
 import type { ParkingRecord } from '../domain/types';
-import type { Gallery, ParkingRepository, PhotoFiles } from './ports';
+import type { Gallery, ParkingRepository, PhotoFiles, SettingsStore } from './ports';
 
 type Deps = {
   repo: ParkingRepository;
   files: PhotoFiles;
   gallery: Gallery;
+  settings: SettingsStore;
   now: () => number;
   newId: () => string;
 };
@@ -18,11 +20,12 @@ export type CaptureInput = {
   note: string;
 };
 
-export function createParkingService({ repo, files, gallery, now, newId }: Deps) {
+export function createParkingService({ repo, files, gallery, settings, now, newId }: Deps) {
   return {
     async capture(input: CaptureInput): Promise<ParkingRecord> {
       const id = newId();
       const createdAt = now();
+      const { retentionDays } = await settings.load();
       const photoPath = await files.save(input.tempUri, id);
       const record: ParkingRecord = {
         id,
@@ -32,7 +35,7 @@ export function createParkingService({ repo, files, gallery, now, newId }: Deps)
         note: input.note.trim(),
         createdAt,
         collectedAt: null,
-        expiresAt: computeExpiresAt(createdAt),
+        expiresAt: computeExpiresAt(createdAt, retentionDays),
       };
       let previouslyOpen: ParkingRecord[];
       try {
@@ -83,6 +86,43 @@ export function createParkingService({ repo, files, gallery, now, newId }: Deps)
         }
       }
       return removed;
+    },
+
+    async updateNote(id: string, note: string): Promise<void> {
+      const record = await repo.get(id);
+      if (!record) return;
+      await repo.updateNote(id, note.trim());
+    },
+
+    async getSettings(): Promise<AppSettings> {
+      return settings.load();
+    },
+
+    /** Persists the settings and re-anchors expiries when the retention window changes. */
+    async updateSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
+      const current = await settings.load();
+      const next = parseSettings({ ...current, ...patch });
+      await settings.save(next);
+      if (next.retentionDays !== current.retentionDays) {
+        for (const record of await repo.list()) {
+          if (record.expiresAt === null) continue;
+          await repo.setExpiresAt(record.id, record.createdAt + next.retentionDays * DAY_MS);
+        }
+      }
+      return next;
+    },
+
+    async deleteAll(): Promise<number> {
+      const records = await repo.list();
+      for (const record of records) {
+        try {
+          await files.remove(record.photoPath);
+        } catch {
+          // The row must still go: an orphan file is easier to live with than a ghost record.
+        }
+      }
+      await repo.removeAll();
+      return records.length;
     },
 
     list: () => repo.list(),

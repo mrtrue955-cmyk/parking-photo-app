@@ -3,8 +3,11 @@ import type { ParkingRecord } from './types';
 export const RETENTION_DAYS = 30;
 export const DAY_MS = 86_400_000;
 
-export function computeExpiresAt(createdAt: number): number {
-  return createdAt + RETENTION_DAYS * DAY_MS;
+export function computeExpiresAt(
+  createdAt: number,
+  retentionDays: number = RETENTION_DAYS,
+): number {
+  return createdAt + retentionDays * DAY_MS;
 }
 
 export function daysLeft(expiresAt: number, now: number): number {

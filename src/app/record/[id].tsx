@@ -2,7 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService, getPhotoFiles } from '../../container';
 import { pickCurrent } from '../../domain/current';
@@ -12,7 +20,7 @@ import { useParking } from '../../hooks/useParking';
 import { directionsUrl } from '../../native/directions';
 import { dismissParkedNotification } from '../../native/parkedNotification';
 import { GalleryPermissionDeniedError } from '../../services/ports';
-import { PrimaryButton, SecondaryButton, TextButton } from '../../ui/components/Button';
+import { IconButton, PrimaryButton, SecondaryButton, TextButton } from '../../ui/components/Button';
 import { ExpiryBar } from '../../ui/components/ExpiryBar';
 import { Text } from '../../ui/components/Text';
 import { successFeedback, warningFeedback } from '../../ui/haptics';
@@ -26,6 +34,9 @@ export default function RecordDetail() {
   const insets = useSafeAreaInsets();
   const { records, loaded, now, refresh } = useParking();
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [saving, setSaving] = useState(false);
   const record = records.find((r) => r.id === id);
 
   if (!loaded) {
@@ -66,6 +77,20 @@ export default function RecordDetail() {
       }
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function saveNote() {
+    setSaving(true);
+    try {
+      await (await getParkingService()).updateNote(recordId, draft);
+      await refresh();
+      successFeedback();
+      setEditing(false);
+    } catch {
+      Alert.alert('Không lưu được', 'Vui lòng thử lại.');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -138,9 +163,57 @@ export default function RecordDetail() {
       </View>
 
       <View style={styles.headBlock}>
-        <Text variant="display" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>
-          {record.note || 'Không có ghi chú'}
-        </Text>
+        {editing ? (
+          <View style={styles.editBlock}>
+            <TextInput
+              value={draft}
+              onChangeText={setDraft}
+              autoFocus
+              maxLength={80}
+              accessibilityLabel="Sửa ghi chú vị trí xe"
+              placeholder="Ví dụ: B2, cột 14"
+              placeholderTextColor={colors.textMuted}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+            />
+            <View style={styles.editActions}>
+              <TextButton title="Huỷ" onPress={() => setEditing(false)} disabled={saving} />
+              <PrimaryButton
+                title={saving ? 'Đang lưu…' : 'Lưu ghi chú'}
+                onPress={saveNote}
+                disabled={saving}
+                style={styles.saveButton}
+              />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.noteRow}>
+            <Text
+              variant="display"
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+              style={styles.noteText}
+            >
+              {record.note || 'Không có ghi chú'}
+            </Text>
+            <IconButton
+              icon="pencil"
+              size={38}
+              accessibilityLabel="Sửa ghi chú"
+              onPress={() => {
+                setDraft(record.note);
+                setEditing(true);
+              }}
+            />
+          </View>
+        )}
         <View style={styles.metaRow}>
           <Ionicons name="time-outline" size={13} color={colors.textMuted} />
           <Text variant="caption" muted>
@@ -224,6 +297,19 @@ const styles = StyleSheet.create({
   },
   countdownText: { color: '#FFFFFF' },
   headBlock: { gap: 4 },
+  noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  noteText: { flex: 1 },
+  editBlock: { gap: spacing.sm },
+  editActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
+  saveButton: { paddingHorizontal: 20 },
+  input: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    minHeight: 48,
+    fontSize: 16,
+  },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   card: {
     gap: spacing.sm,

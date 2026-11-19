@@ -47,7 +47,11 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Cho phép app lưu vị trí xe để dẫn đường về."
+          "locationWhenInUsePermission": "Cho phép app lưu vị trí xe để dẫn đường về.",
+          "locationAlwaysAndWhenInUsePermission": "Cho phép app nhắc bạn khi rời bãi đỗ.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "locationAlwaysPermission": "Cho phép app nhắc bạn khi rời bãi đỗ."
         }
       ],
       [

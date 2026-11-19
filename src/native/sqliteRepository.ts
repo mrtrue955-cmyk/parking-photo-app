@@ -34,8 +34,17 @@ export function createSqliteRepository(db: SQLiteDatabase): ParkingRepository {
     async setKept(id: string) {
       await db.runAsync('UPDATE parking_records SET expiresAt = NULL WHERE id = ?', id);
     },
+    async setExpiresAt(id: string, expiresAt: number | null) {
+      await db.runAsync('UPDATE parking_records SET expiresAt = ? WHERE id = ?', expiresAt, id);
+    },
+    async updateNote(id: string, note: string) {
+      await db.runAsync('UPDATE parking_records SET note = ? WHERE id = ?', note, id);
+    },
     async remove(id: string) {
       await db.runAsync('DELETE FROM parking_records WHERE id = ?', id);
+    },
+    async removeAll() {
+      await db.runAsync('DELETE FROM parking_records');
     },
   };
 }

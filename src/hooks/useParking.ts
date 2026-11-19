@@ -5,6 +5,7 @@ import { getParkingService } from '../container';
 import { pickCurrent } from '../domain/current';
 import type { ParkingRecord } from '../domain/types';
 import { onParkingChanged } from './parkingEvents';
+import { syncGeofence } from '../native/geofence';
 import { dismissParkedNotification } from '../native/parkedNotification';
 import { syncReminders } from '../native/reminders';
 
@@ -35,7 +36,14 @@ export function useParking() {
       return;
     }
     if (requestId !== latestRequest.current) return;
-    if (!pickCurrent(list)) await dismissParkedNotification();
+    const current = pickCurrent(list);
+    if (!current) await dismissParkedNotification();
+    try {
+      const settings = await (await getParkingService()).getSettings();
+      await syncGeofence(current, settings.geofenceEnabled);
+    } catch (error) {
+      console.warn('Failed to sync the geofence', error);
+    }
     try {
       await syncReminders(list, Date.now());
     } catch (error) {

@@ -1,17 +1,19 @@
 import { DAY_MS } from '../src/domain/expiry';
 import { createParkingService } from '../src/services/parkingService';
-import { FakeFiles, FakeGallery, FakeRepo } from './fakes';
+import { FakeFiles, FakeGallery, FakeRepo, FakeSettings } from './fakes';
 
 function setup(start = 1_000) {
   const repo = new FakeRepo();
   const files = new FakeFiles();
   const gallery = new FakeGallery();
+  const settings = new FakeSettings();
   let t = start;
   let n = 0;
   const service = createParkingService({
     repo,
     files,
     gallery,
+    settings,
     now: () => t,
     newId: () => `id${++n}`,
   });
@@ -19,6 +21,7 @@ function setup(start = 1_000) {
     repo,
     files,
     gallery,
+    settings,
     service,
     setNow: (v: number) => {
       t = v;
@@ -193,4 +196,52 @@ test('deleteNow removes the file and the record', async () => {
   // Then both file and record are gone
   expect(await repo.get(rec.id)).toBeNull();
   expect(await files.exists(rec.photoPath)).toBe(false);
+});
+
+test('capture honours the retention setting', async () => {
+  const { service, settings } = setup(1_000);
+  await settings.save({ ...settings.current, retentionDays: 7 });
+  const rec = await service.capture(shot);
+  expect(rec.expiresAt).toBe(1_000 + 7 * DAY_MS);
+});
+
+test('updateSettings re-anchors expiries but leaves kept photos alone', async () => {
+  const { service, settings, setNow } = setup(1_000);
+  const first = await service.capture(shot);
+  setNow(2_000);
+  const kept = await service.capture({ ...shot, tempUri: 'tmp2.jpg' });
+  await service.keep(kept.id);
+  const next = await service.updateSettings({ retentionDays: 7 });
+  expect(next.retentionDays).toBe(7);
+  const rows = await service.list();
+  const reanchored = rows.find((r) => r.id === first.id)!;
+  const stillKept = rows.find((r) => r.id === kept.id)!;
+  expect(reanchored.expiresAt).toBe(first.createdAt + 7 * DAY_MS);
+  expect(stillKept.expiresAt).toBeNull();
+  expect((await settings.load()).retentionDays).toBe(7);
+});
+
+test('updateSettings keeps unrelated settings intact', async () => {
+  const { service } = setup();
+  const next = await service.updateSettings({ remindersEnabled: false });
+  expect(next.retentionDays).toBe(30);
+  expect(next.remindersEnabled).toBe(false);
+});
+
+test('updateNote trims and ignores unknown ids', async () => {
+  const { service, repo } = setup();
+  const rec = await service.capture(shot);
+  await service.updateNote(rec.id, '  B3 · cột 7  ');
+  expect((await repo.get(rec.id))!.note).toBe('B3 · cột 7');
+  await expect(service.updateNote('missing', 'x')).resolves.toBeUndefined();
+});
+
+test('deleteAll removes every row and photo file', async () => {
+  const { service, repo, files } = setup();
+  const a = await service.capture(shot);
+  await service.capture({ ...shot, tempUri: 'tmp2.jpg' });
+  const removed = await service.deleteAll();
+  expect(removed).toBe(2);
+  expect(await repo.list()).toEqual([]);
+  expect(await files.exists(a.photoPath)).toBe(false);
 });

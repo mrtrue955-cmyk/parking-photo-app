@@ -1,5 +1,6 @@
+import { DEFAULT_SETTINGS, type AppSettings } from '../src/domain/settings';
 import type { ParkingRecord } from '../src/domain/types';
-import type { Gallery, ParkingRepository, PhotoFiles } from '../src/services/ports';
+import type { Gallery, ParkingRepository, PhotoFiles, SettingsStore } from '../src/services/ports';
 
 export class FakeRepo implements ParkingRepository {
   rows = new Map<string, ParkingRecord>();
@@ -24,9 +25,18 @@ export class FakeRepo implements ParkingRepository {
   async setKept(id: string) {
     this.rows.get(id)!.expiresAt = null;
   }
+  async setExpiresAt(id: string, expiresAt: number | null) {
+    this.rows.get(id)!.expiresAt = expiresAt;
+  }
+  async updateNote(id: string, note: string) {
+    this.rows.get(id)!.note = note;
+  }
   async remove(id: string) {
     if (this.failRemoveIds.has(id)) throw new Error('remove failed');
     this.rows.delete(id);
+  }
+  async removeAll() {
+    this.rows.clear();
   }
 }
 
@@ -54,5 +64,17 @@ export class FakeGallery implements Gallery {
   async save(uri: string) {
     if (this.fail) throw new Error('no permission');
     this.saved.push(uri);
+  }
+}
+
+export class FakeSettings implements SettingsStore {
+  current: AppSettings = { ...DEFAULT_SETTINGS };
+  failSave = false;
+  async load() {
+    return { ...this.current };
+  }
+  async save(settings: AppSettings) {
+    if (this.failSave) throw new Error('save failed');
+    this.current = { ...settings };
   }
 }
