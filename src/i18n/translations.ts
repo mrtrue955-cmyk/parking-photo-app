@@ -184,9 +184,6 @@ const vi = {
   'widget.emptyHint': 'Mở app để chụp cột',
   'widget.spotFallback': 'Xe đang đậu',
 
-  'notif.parked.title': 'Vị trí xe của bạn',
-  'notif.parked.bodyWithNote': 'Xe bạn đang đậu ở {note}',
-  'notif.parked.bodyNoNote': 'Bạn đã đậu xe',
   'notif.reminder.title': 'Ảnh vị trí xe sắp bị xoá',
   'notif.reminder.body': {
     one: '{count} ảnh sẽ bị xoá vào ngày mai. Mở app để giữ lại.',
@@ -194,8 +191,6 @@ const vi = {
   },
   'notif.geofence.title': 'Bạn đã rời bãi đỗ',
   'notif.geofence.body': 'Vị trí xe vẫn được lưu. Mở app để xem ảnh hoặc xoá nếu đã lấy xe.',
-  'notif.action.collect': 'Đã lấy xe',
-  'notif.action.navigate': 'Dẫn đường về xe',
 } satisfies Record<string, TranslationValue>;
 
 const en: Record<keyof typeof vi, TranslationValue> = {
@@ -382,9 +377,6 @@ const en: Record<keyof typeof vi, TranslationValue> = {
   'widget.emptyHint': 'Open the app to save one',
   'widget.spotFallback': 'Car parked',
 
-  'notif.parked.title': 'Your parking spot',
-  'notif.parked.bodyWithNote': 'Your car is parked at {note}',
-  'notif.parked.bodyNoNote': 'You parked your car',
   'notif.reminder.title': 'Parking photos will be deleted',
   'notif.reminder.body': {
     one: '{count} photo will be deleted tomorrow. Open the app to keep it.',
@@ -393,8 +385,6 @@ const en: Record<keyof typeof vi, TranslationValue> = {
   'notif.geofence.title': 'You left the parking area',
   'notif.geofence.body':
     'Your spot is still saved. Open the app to see the photo or delete it if you have your car.',
-  'notif.action.collect': 'Car collected',
-  'notif.action.navigate': 'Directions to my car',
 };
 
 export const translations = { vi, en } as const;
