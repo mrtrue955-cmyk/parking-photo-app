@@ -23,6 +23,7 @@ import { dismissParkedNotification } from '../../native/parkedNotification';
 import { GalleryPermissionDeniedError } from '../../services/ports';
 import { IconButton, PrimaryButton, SecondaryButton, TextButton } from '../../ui/components/Button';
 import { ExpiryBar } from '../../ui/components/ExpiryBar';
+import { SpotMap } from '../../ui/components/SpotMap';
 import { Text } from '../../ui/components/Text';
 import { successFeedback, warningFeedback } from '../../ui/haptics';
 import { fontFamilies, radius, spacing } from '../../ui/theme';
@@ -229,6 +230,14 @@ export default function RecordDetail() {
         </View>
       </View>
 
+      {hasGps ? (
+        <SpotMap
+          latitude={record.lat!}
+          longitude={record.lng!}
+          title={record.note || t('detail.mapA11y')}
+        />
+      ) : null}
+
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Text variant="caption" muted>
           {record.expiresAt === null ? t('detail.keptLabel') : t('detail.expiryLabel')}
@@ -253,7 +262,7 @@ export default function RecordDetail() {
 
       {hasGps ? (
         <PrimaryButton
-          title={t('detail.directions')}
+          title={t('detail.walk')}
           onPress={() =>
             Linking.openURL(directionsUrl(record.lat!, record.lng!)).catch(() =>
               Alert.alert(t('detail.mapErrorTitle'), t('detail.mapErrorBody')),
