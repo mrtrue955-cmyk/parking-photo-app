@@ -1,9 +1,23 @@
-import { buildReminders, computeExpiresAt, DAY_MS, daysLeft, expiryFraction, isExpired, isExpiringSoon } from '../src/domain/expiry';
+import {
+  buildReminders,
+  computeExpiresAt,
+  DAY_MS,
+  daysLeft,
+  expiryFraction,
+  isExpired,
+  isExpiringSoon,
+} from '../src/domain/expiry';
 import type { ParkingRecord } from '../src/domain/types';
 
 const base: ParkingRecord = {
-  id: 'a', photoPath: 'a.jpg', lat: null, lng: null, note: '',
-  createdAt: 0, collectedAt: null, expiresAt: 30 * DAY_MS,
+  id: 'a',
+  photoPath: 'a.jpg',
+  lat: null,
+  lng: null,
+  note: '',
+  createdAt: 0,
+  collectedAt: null,
+  expiresAt: 30 * DAY_MS,
 };
 
 test('computeExpiresAt adds 30 days', () => {

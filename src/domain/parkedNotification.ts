@@ -35,7 +35,12 @@ export function parseParkedAction(actionIdentifier: string, data: unknown): Park
   if (actionIdentifier === PARKED_ACTION_NAVIGATE) {
     const lat = record?.lat;
     const lng = record?.lng;
-    if (typeof lat === 'number' && Number.isFinite(lat) && typeof lng === 'number' && Number.isFinite(lng)) {
+    if (
+      typeof lat === 'number' &&
+      Number.isFinite(lat) &&
+      typeof lng === 'number' &&
+      Number.isFinite(lng)
+    ) {
       return { type: 'navigate', lat, lng, recordId };
     }
   }

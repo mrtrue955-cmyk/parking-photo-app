@@ -39,7 +39,9 @@ export default function CaptureScreen() {
   const [coords, setCoords] = useState<Coords>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
-  const [suggestionStatus, setSuggestionStatus] = useState<'idle' | 'reading' | 'suggested'>('idle');
+  const [suggestionStatus, setSuggestionStatus] = useState<'idle' | 'reading' | 'suggested'>(
+    'idle',
+  );
   const suggestionRequest = useRef(0);
   const noteEdited = useRef(false);
 
@@ -180,7 +182,11 @@ export default function CaptureScreen() {
           <TextInput
             style={[
               styles.input,
-              { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text },
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.text,
+              },
             ]}
             placeholder="Ghi chú (ví dụ: B2, cột 14)"
             placeholderTextColor={colors.textMuted}
@@ -233,7 +239,13 @@ export default function CaptureScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: spacing.screen, gap: spacing.md },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.lg },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
   message: { textAlign: 'center' },
   hint: { textAlign: 'center' },
   camera: { flex: 1, borderRadius: radius.card, overflow: 'hidden' },

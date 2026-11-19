@@ -58,17 +58,31 @@ test('parseParkedAction still collects (and dismisses) when the record id is mis
   // Given the collect action with missing, empty or wrongly typed data
   // When parsing it
   // Then it is still a collect action with a null record id, so the handler can dismiss safely
-  expect(parseParkedAction(PARKED_ACTION_COLLECT, undefined)).toEqual({ type: 'collect', recordId: null });
-  expect(parseParkedAction(PARKED_ACTION_COLLECT, { recordId: '' })).toEqual({ type: 'collect', recordId: null });
-  expect(parseParkedAction(PARKED_ACTION_COLLECT, { recordId: 7 })).toEqual({ type: 'collect', recordId: null });
-  expect(parseParkedAction(PARKED_ACTION_COLLECT, 'junk')).toEqual({ type: 'collect', recordId: null });
+  expect(parseParkedAction(PARKED_ACTION_COLLECT, undefined)).toEqual({
+    type: 'collect',
+    recordId: null,
+  });
+  expect(parseParkedAction(PARKED_ACTION_COLLECT, { recordId: '' })).toEqual({
+    type: 'collect',
+    recordId: null,
+  });
+  expect(parseParkedAction(PARKED_ACTION_COLLECT, { recordId: 7 })).toEqual({
+    type: 'collect',
+    recordId: null,
+  });
+  expect(parseParkedAction(PARKED_ACTION_COLLECT, 'junk')).toEqual({
+    type: 'collect',
+    recordId: null,
+  });
 });
 
 test('parseParkedAction reads the navigate action with valid coordinates', () => {
   // Given the navigate action with numeric coordinates
   // When parsing it
   // Then it returns the coordinates
-  expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { recordId: 'r1', lat: 10.5, lng: 106.7 })).toEqual({
+  expect(
+    parseParkedAction(PARKED_ACTION_NAVIGATE, { recordId: 'r1', lat: 10.5, lng: 106.7 }),
+  ).toEqual({
     type: 'navigate',
     lat: 10.5,
     lng: 106.7,
@@ -92,21 +106,27 @@ test('parseParkedAction accepts zero latitude and negative longitude', () => {
   // Given valid coordinates on the equator and in the western hemisphere
   // When parsing the navigate action
   // Then they are accepted (0 and negatives are not "missing")
-  expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { recordId: 'r2', lat: 0, lng: -73.9 })).toEqual({
-    type: 'navigate',
-    lat: 0,
-    lng: -73.9,
-    recordId: 'r2',
-  });
+  expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { recordId: 'r2', lat: 0, lng: -73.9 })).toEqual(
+    {
+      type: 'navigate',
+      lat: 0,
+      lng: -73.9,
+      recordId: 'r2',
+    },
+  );
 });
 
 test('parseParkedAction falls back to "open" for navigate without usable coordinates', () => {
   // Given the navigate action with null, missing, non-numeric or non-finite coordinates
   // When parsing it
   // Then it is just "open" (never a broken maps URL)
-  expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { lat: null, lng: null })).toEqual({ type: 'open' });
+  expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { lat: null, lng: null })).toEqual({
+    type: 'open',
+  });
   expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { lat: 1 })).toEqual({ type: 'open' });
-  expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { lat: '1', lng: '2' })).toEqual({ type: 'open' });
+  expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { lat: '1', lng: '2' })).toEqual({
+    type: 'open',
+  });
   expect(parseParkedAction(PARKED_ACTION_NAVIGATE, { lat: NaN, lng: 2 })).toEqual({ type: 'open' });
   expect(parseParkedAction(PARKED_ACTION_NAVIGATE, null)).toEqual({ type: 'open' });
 });
@@ -115,7 +135,9 @@ test('parseParkedAction treats the default tap and unknown actions as "open"', (
   // Given a tap on the notification body and an unknown action id
   // When parsing them
   // Then both just open the app
-  expect(parseParkedAction('expo.modules.notifications.actions.DEFAULT', { recordId: 'r1' })).toEqual({ type: 'open' });
+  expect(
+    parseParkedAction('expo.modules.notifications.actions.DEFAULT', { recordId: 'r1' }),
+  ).toEqual({ type: 'open' });
   expect(parseParkedAction('something-else', {})).toEqual({ type: 'open' });
 });
 

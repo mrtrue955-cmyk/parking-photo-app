@@ -9,7 +9,8 @@ export function Chip({ label, tone = 'neutral' }: { label: string; tone?: Tone }
   const { colors } = useTheme();
   const backgroundColor =
     tone === 'primary' ? colors.chip : tone === 'danger' ? colors.dangerChip : colors.surfaceAlt;
-  const color = tone === 'primary' ? colors.onChip : tone === 'danger' ? colors.danger : colors.text;
+  const color =
+    tone === 'primary' ? colors.onChip : tone === 'danger' ? colors.danger : colors.text;
   return (
     <View style={[styles.chip, { backgroundColor }]}>
       <Text variant="caption" style={{ color }}>

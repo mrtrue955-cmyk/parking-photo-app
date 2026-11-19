@@ -14,9 +14,16 @@ export class FakeRepo implements ParkingRepository {
     if (this.failList) throw new Error('list failed');
     return [...this.rows.values()].map((r) => ({ ...r }));
   }
-  async get(id: string) { const r = this.rows.get(id); return r ? { ...r } : null; }
-  async setCollected(id: string, at: number) { this.rows.get(id)!.collectedAt = at; }
-  async setKept(id: string) { this.rows.get(id)!.expiresAt = null; }
+  async get(id: string) {
+    const r = this.rows.get(id);
+    return r ? { ...r } : null;
+  }
+  async setCollected(id: string, at: number) {
+    this.rows.get(id)!.collectedAt = at;
+  }
+  async setKept(id: string) {
+    this.rows.get(id)!.expiresAt = null;
+  }
   async remove(id: string) {
     if (this.failRemoveIds.has(id)) throw new Error('remove failed');
     this.rows.delete(id);
@@ -25,10 +32,20 @@ export class FakeRepo implements ParkingRepository {
 
 export class FakeFiles implements PhotoFiles {
   names = new Set<string>();
-  async save(_tempUri: string, id: string) { const n = `${id}.jpg`; this.names.add(n); return n; }
-  async remove(name: string) { this.names.delete(name); }
-  async exists(name: string) { return this.names.has(name); }
-  uriFor(name: string) { return `file:///photos/${name}`; }
+  async save(_tempUri: string, id: string) {
+    const n = `${id}.jpg`;
+    this.names.add(n);
+    return n;
+  }
+  async remove(name: string) {
+    this.names.delete(name);
+  }
+  async exists(name: string) {
+    return this.names.has(name);
+  }
+  uriFor(name: string) {
+    return `file:///photos/${name}`;
+  }
 }
 
 export class FakeGallery implements Gallery {

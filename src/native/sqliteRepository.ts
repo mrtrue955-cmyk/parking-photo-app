@@ -9,14 +9,24 @@ export function createSqliteRepository(db: SQLiteDatabase): ParkingRepository {
         `INSERT INTO parking_records
            (id, photoPath, lat, lng, note, createdAt, collectedAt, expiresAt)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        r.id, r.photoPath, r.lat, r.lng, r.note, r.createdAt, r.collectedAt, r.expiresAt,
+        r.id,
+        r.photoPath,
+        r.lat,
+        r.lng,
+        r.note,
+        r.createdAt,
+        r.collectedAt,
+        r.expiresAt,
       );
     },
     list() {
       return db.getAllAsync<ParkingRecord>('SELECT * FROM parking_records ORDER BY createdAt DESC');
     },
     async get(id: string) {
-      return (await db.getFirstAsync<ParkingRecord>('SELECT * FROM parking_records WHERE id = ?', id)) ?? null;
+      return (
+        (await db.getFirstAsync<ParkingRecord>('SELECT * FROM parking_records WHERE id = ?', id)) ??
+        null
+      );
     },
     async setCollected(id: string, at: number) {
       await db.runAsync('UPDATE parking_records SET collectedAt = ? WHERE id = ?', at, id);

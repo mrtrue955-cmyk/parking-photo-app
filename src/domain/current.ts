@@ -11,7 +11,5 @@ export function pickCurrent(records: ParkingRecord[]): ParkingRecord | null {
 
 export function historyOf(records: ParkingRecord[]): ParkingRecord[] {
   const current = pickCurrent(records);
-  return records
-    .filter((r) => r.id !== current?.id)
-    .sort((a, b) => b.createdAt - a.createdAt);
+  return records.filter((r) => r.id !== current?.id).sort((a, b) => b.createdAt - a.createdAt);
 }

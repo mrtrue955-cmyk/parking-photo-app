@@ -26,7 +26,13 @@ export function EmptyState({ icon, text, actionTitle, onAction }: Props) {
 
 const styles = StyleSheet.create({
   container: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.lg },
-  circle: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
+  circle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   text: { textAlign: 'center', maxWidth: 280 },
   action: { alignSelf: 'stretch' },
 });

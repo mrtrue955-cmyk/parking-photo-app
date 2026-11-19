@@ -2,8 +2,14 @@ import { historyOf, pickCurrent } from '../src/domain/current';
 import type { ParkingRecord } from '../src/domain/types';
 
 const rec = (id: string, createdAt: number, collectedAt: number | null): ParkingRecord => ({
-  id, photoPath: `${id}.jpg`, lat: null, lng: null, note: '',
-  createdAt, collectedAt, expiresAt: createdAt + 1,
+  id,
+  photoPath: `${id}.jpg`,
+  lat: null,
+  lng: null,
+  note: '',
+  createdAt,
+  collectedAt,
+  expiresAt: createdAt + 1,
 });
 
 test('pickCurrent returns the newest record that has not been collected', () => {

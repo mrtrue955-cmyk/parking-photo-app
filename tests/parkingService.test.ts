@@ -9,9 +9,21 @@ function setup(start = 1_000) {
   let t = start;
   let n = 0;
   const service = createParkingService({
-    repo, files, gallery, now: () => t, newId: () => `id${++n}`,
+    repo,
+    files,
+    gallery,
+    now: () => t,
+    newId: () => `id${++n}`,
   });
-  return { repo, files, gallery, service, setNow: (v: number) => { t = v; } };
+  return {
+    repo,
+    files,
+    gallery,
+    service,
+    setNow: (v: number) => {
+      t = v;
+    },
+  };
 }
 
 const shot = { tempUri: 'tmp.jpg', lat: 10, lng: 20, note: '  B2, cột 14  ' };

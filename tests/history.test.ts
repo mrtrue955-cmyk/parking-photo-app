@@ -28,7 +28,11 @@ test('filterHistory "all" returns every record unchanged', () => {
   // When filtering with "all"
   // Then every record is returned in the same order
   expect(filterHistory(records, 'all', now).map((r) => r.id)).toEqual([
-    'fresh', 'boundary', 'soon', 'today', 'kept',
+    'fresh',
+    'boundary',
+    'soon',
+    'today',
+    'kept',
   ]);
 });
 

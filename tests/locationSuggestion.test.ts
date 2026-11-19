@@ -185,7 +185,17 @@ test('stays silent on look-alike text', () => {
   // Given direction signs, plates, times, years and exit signs
   // When suggesting a note
   // Then nothing is suggested
-  for (const line of ['B1 B2', '51A-123.45', '30E-123.45', '12:30', 'B2-2026', 'B12-14', 'EXIT B2 ONLY', '120.000', '2026']) {
+  for (const line of [
+    'B1 B2',
+    '51A-123.45',
+    '30E-123.45',
+    '12:30',
+    'B2-2026',
+    'B12-14',
+    'EXIT B2 ONLY',
+    '120.000',
+    '2026',
+  ]) {
     expect(suggestLocationNote([line])).toBeNull();
   }
 });
@@ -228,9 +238,9 @@ test('reads the real AEON garage photo as D27', () => {
   // Given the exact lines Apple Vision returned for the AEON photo
   // When suggesting a note
   // Then the repeated zone letter and the pillar number combine
-  expect(
-    suggestLocationNote(['ÆON MALL', 'KON MALL Sn Tim', 'D', 'D', 'D', 'D', '27']),
-  ).toBe('D27');
+  expect(suggestLocationNote(['ÆON MALL', 'KON MALL Sn Tim', 'D', 'D', 'D', 'D', '27'])).toBe(
+    'D27',
+  );
 });
 
 test('reads the real orange pillar photo as level B3 and pillar 22', () => {

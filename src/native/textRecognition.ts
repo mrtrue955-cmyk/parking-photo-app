@@ -1,5 +1,5 @@
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { deleteAsync } from 'expo-file-system/legacy';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { extractTextFromImage, isSupported } from 'expo-text-extractor';
 import { toTextLines } from '../domain/locationSuggestion';
 
@@ -19,7 +19,10 @@ async function prepareImage(photoUri: string): Promise<string> {
       maxHeight: MAX_SIDE_PX,
     });
     const image = await context.renderAsync();
-    const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: JPEG_QUALITY });
+    const saved = await image.saveAsync({
+      format: SaveFormat.JPEG,
+      compress: JPEG_QUALITY,
+    });
     return saved.uri;
   } catch (error) {
     console.warn('Failed to prepare the photo for text recognition', error);
@@ -47,6 +50,7 @@ export async function recognizeTextLines(photoUri: string): Promise<string[]> {
         timer = setTimeout(() => resolve([]), TIMEOUT_MS);
       }),
     ]);
+
     return Array.isArray(result)
       ? toTextLines(result.filter((line): line is string => typeof line === 'string'))
       : [];

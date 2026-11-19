@@ -9,13 +9,13 @@ let servicePromise: Promise<ParkingService> | null = null;
 export function getParkingService(): Promise<ParkingService> {
   servicePromise ??= getDb()
     .then((db) =>
-    createParkingService({
-      repo: createSqliteRepository(db),
-      files: photoFiles,
-      gallery,
-      now: () => Date.now(),
-      newId: () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
-    }),
+      createParkingService({
+        repo: createSqliteRepository(db),
+        files: photoFiles,
+        gallery,
+        now: () => Date.now(),
+        newId: () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+      }),
     )
     .catch((error) => {
       servicePromise = null;

@@ -53,7 +53,12 @@ export async function showParkedNotification(
         title,
         body,
         categoryIdentifier: parkedCategoryFor(record.lat !== null && record.lng !== null),
-        data: { recordId: record.id, lat: record.lat, lng: record.lng, ...(options?.silent ? { silent: true } : {}) },
+        data: {
+          recordId: record.id,
+          lat: record.lat,
+          lng: record.lng,
+          ...(options?.silent ? { silent: true } : {}),
+        },
       },
       trigger: null,
     });

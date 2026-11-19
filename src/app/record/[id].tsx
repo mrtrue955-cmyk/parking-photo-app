@@ -95,7 +95,13 @@ export default function RecordDetail() {
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={[styles.container, { paddingBottom: spacing.xl + insets.bottom }]}
     >
-      <Image source={{ uri }} style={styles.photo} contentFit="cover" accessible accessibilityLabel="Ảnh vị trí xe" />
+      <Image
+        source={{ uri }}
+        style={styles.photo}
+        contentFit="cover"
+        accessible
+        accessibilityLabel="Ảnh vị trí xe"
+      />
       <Chip label={status.label} tone={status.tone} />
       {record.note ? (
         <Text variant="display" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>
@@ -115,7 +121,9 @@ export default function RecordDetail() {
           </Text>
         ) : null}
       </View>
-      {record.expiresAt !== null ? <PrimaryButton title="Giữ lại" onPress={keep} disabled={busy} /> : null}
+      {record.expiresAt !== null ? (
+        <PrimaryButton title="Giữ lại" onPress={keep} disabled={busy} />
+      ) : null}
       {record.lat !== null && record.lng !== null ? (
         <SecondaryButton
           title="Mở bản đồ"
