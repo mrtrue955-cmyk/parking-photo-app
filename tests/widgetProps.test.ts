@@ -1,6 +1,6 @@
 import type { ParkingRecord } from '../src/domain/types';
 import { DAY_MS } from '../src/domain/expiry';
-import { parkedWidgetProps } from '../src/widgets/props';
+import { parkedActivityProps, parkedWidgetProps } from '../src/widgets/props';
 
 const now = 1_000_000_000_000;
 
@@ -51,4 +51,22 @@ test('the widget uses the brand colours', () => {
   const props = parkedWidgetProps(null, now, 'vi');
   expect(props.background).toBe('#FBF7F0');
   expect(props.accent).toBe('#F5A524');
+});
+
+test('no parked spot means no activity', () => {
+  expect(parkedActivityProps(null, now, 'vi')).toBeNull();
+});
+
+test('the activity repeats the spot, the start time and the remaining days', () => {
+  const props = parkedActivityProps(rec('B1 · Cột 45', now + 3 * DAY_MS), now, 'vi')!;
+  expect(props.spot).toBe('B1 · Cột 45');
+  expect(props.parkedLabel).toBe('Đang đậu');
+  expect(props.daysLabel).toBe('còn 3 ngày');
+  expect(props.startedLabel).toMatch(/^Đỗ lúc /);
+});
+
+test('the activity follows the app language', () => {
+  const props = parkedActivityProps(rec('B2 · Cột 7', now + DAY_MS), now, 'en')!;
+  expect(props.startedLabel).toMatch(/^Parked at /);
+  expect(props.daysLabel).toBe('1 day left');
 });

@@ -40,3 +40,36 @@ export function parkedWidgetProps(
         : translate(locale, 'spot.daysLeft', { count: days }),
   };
 }
+
+export type ParkedActivityView = {
+  parkedLabel: string;
+  spot: string;
+  startedLabel: string;
+  daysLabel: string;
+  accent: string;
+  ink: string;
+  muted: string;
+};
+
+/** Returns null when nothing is parked, which is the signal to end the activity. */
+export function parkedActivityProps(
+  record: ParkingRecord | null,
+  now: number,
+  locale: Locale,
+): ParkedActivityView | null {
+  if (!record) return null;
+  const widget = parkedWidgetProps(record, now, locale);
+  const time = new Intl.DateTimeFormat(locale === 'vi' ? 'vi-VN' : 'en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(record.createdAt));
+  return {
+    parkedLabel: widget.parkedLabel,
+    spot: widget.spot,
+    startedLabel: translate(locale, 'activity.started', { time }),
+    daysLabel: widget.daysLabel,
+    accent: COLORS.accent,
+    ink: COLORS.ink,
+    muted: COLORS.muted,
+  };
+}

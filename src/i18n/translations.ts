@@ -161,6 +161,7 @@ const vi = {
   },
   'settings.data.errorTitle': 'Không xoá được',
 
+  'activity.started': 'Đỗ lúc {time}',
   'widget.emptyTitle': 'Chưa lưu vị trí',
   'widget.emptyHint': 'Mở app để chụp cột',
   'widget.spotFallback': 'Xe đang đậu',
@@ -340,6 +341,7 @@ const en: Record<keyof typeof vi, TranslationValue> = {
   },
   'settings.data.errorTitle': 'Could not delete the data',
 
+  'activity.started': 'Parked at {time}',
   'widget.emptyTitle': 'No spot saved',
   'widget.emptyHint': 'Open the app to save one',
   'widget.spotFallback': 'Car parked',
