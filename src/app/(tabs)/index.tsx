@@ -7,6 +7,7 @@ import { useParking } from '../../hooks/useParking';
 import { directionsUrl } from '../../native/directions';
 import { dismissParkedNotification } from '../../native/parkedNotification';
 import { TextButton } from '../../ui/components/Button';
+import { CaptureCta } from '../../ui/components/CaptureCta';
 import { EmptyState } from '../../ui/components/EmptyState';
 import { HistoryCard } from '../../ui/components/HistoryCard';
 import { SpotCard } from '../../ui/components/SpotCard';
@@ -46,6 +47,7 @@ export default function Home() {
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={[
         styles.content,
+        current ? null : styles.contentFill,
         { paddingTop: insets.top + spacing.md, paddingBottom: bottomSpace },
       ]}
     >
@@ -64,12 +66,17 @@ export default function Home() {
           onCollect={collect}
         />
       ) : (
-        <EmptyState
-          icon="camera"
-          text="Chụp cây cột gần chỗ đậu. Ảnh tự xoá sau 30 ngày."
-          actionTitle="Chụp vị trí xe"
-          onAction={() => router.push('/capture')}
-        />
+        <View style={styles.emptyBlock}>
+          <View style={styles.spacer} />
+          <EmptyState
+            icon="camera-outline"
+            title="Chưa có vị trí nào"
+            text="Chụp cây cột ở chỗ bạn đậu. App đọc tầng và số cột, ảnh tự xoá sau 30 ngày."
+            steps={['Chụp cột', 'Lưu vị trí', 'Tự xoá']}
+            note="Ảnh chỉ nằm trên máy này, không tải lên mạng."
+          />
+          <CaptureCta onPress={() => router.push('/capture')} />
+        </View>
       )}
       {recent.length > 0 ? (
         <View style={styles.section}>
@@ -95,6 +102,9 @@ export default function Home() {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { paddingHorizontal: spacing.screen, gap: spacing.md },
+  contentFill: { flexGrow: 1 },
+  emptyBlock: { flex: 1, justifyContent: 'center', gap: spacing.sm },
+  spacer: { flex: 0 },
   section: { gap: spacing.sm },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 });

@@ -1,11 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { daysLeft } from '../../domain/expiry';
 import type { ParkingRecord } from '../../domain/types';
 import { formatTimeAgo } from '../format';
-import { radius, spacing } from '../theme';
+import { fontFamilies, radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
 import { PrimaryButton, SecondaryButton } from './Button';
-import { Chip } from './Chip';
 import { Text } from './Text';
 
 type Props = {
@@ -20,35 +21,62 @@ type Props = {
 export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect }: Props) {
   const { colors } = useTheme();
   const hasGps = record.lat !== null && record.lng !== null;
+  const remaining = record.expiresAt !== null ? daysLeft(record.expiresAt, now) : null;
+  const title = record.note || 'Không có ghi chú';
+
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <Pressable
         accessibilityRole="imagebutton"
-        accessibilityLabel="Mở chi tiết vị trí xe"
+        accessibilityLabel={`${title}, đang đậu. Mở chi tiết vị trí xe`}
         onPress={onOpen}
       >
-        <Image source={{ uri: photoUri }} style={styles.photo} contentFit="cover" />
+        <View>
+          <Image source={{ uri: photoUri }} style={styles.photo} contentFit="cover" />
+          <View style={styles.topRow}>
+            <View style={[styles.statusBadge, { backgroundColor: colors.primary }]}>
+              <Text
+                variant="caption"
+                style={{ color: colors.onPrimary, fontFamily: fontFamilies.semibold }}
+              >
+                Đang đậu
+              </Text>
+            </View>
+            {remaining !== null ? (
+              <View style={styles.countdown}>
+                <Ionicons name="time-outline" size={12} color="#FFFFFF" />
+                <Text variant="caption" style={styles.countdownText}>
+                  còn {remaining} ngày
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          <View style={styles.overlay}>
+            <Text numberOfLines={2} style={styles.note}>
+              {title}
+            </Text>
+            <Text variant="caption" style={styles.time}>
+              Đậu {formatTimeAgo(record.createdAt, now)}
+            </Text>
+          </View>
+        </View>
       </Pressable>
-      <Chip label="Đang đậu" tone="primary" />
-      {record.note ? (
-        <Text variant="display" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>
-          {record.note}
-        </Text>
-      ) : (
-        <Text muted>Không có ghi chú</Text>
-      )}
-      <Text variant="caption" muted>
-        Đậu {formatTimeAgo(record.createdAt, now)}
-      </Text>
-      <View style={styles.actions}>
-        {hasGps ? (
-          <>
-            <SecondaryButton title="Đã lấy xe" onPress={onCollect} style={styles.secondary} />
-            <PrimaryButton title="Dẫn đường về xe" onPress={onNavigate} style={styles.primary} />
-          </>
-        ) : (
-          <PrimaryButton title="Đã lấy xe" onPress={onCollect} style={styles.primary} />
+
+      <View style={styles.body}>
+        {hasGps ? null : (
+          <View style={styles.noGps}>
+            <Ionicons name="location-outline" size={14} color={colors.textMuted} />
+            <Text variant="caption" muted>
+              Không có GPS cho vị trí này
+            </Text>
+          </View>
         )}
+        <View style={styles.actions}>
+          <SecondaryButton title="Đã lấy xe" onPress={onCollect} style={styles.secondary} />
+          {hasGps ? (
+            <PrimaryButton title="Dẫn đường" onPress={onNavigate} style={styles.primary} />
+          ) : null}
+        </View>
       </View>
     </View>
   );
@@ -56,13 +84,52 @@ export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect 
 
 const styles = StyleSheet.create({
   card: {
-    padding: 12,
-    gap: spacing.sm,
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
   },
-  photo: { width: '100%', height: 200, borderRadius: radius.photo },
-  actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  photo: { width: '100%', height: 232 },
+  topRow: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill },
+  countdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(20, 16, 14, 0.55)',
+  },
+  countdownText: { color: '#FFFFFF' },
+  overlay: {
+    position: 'absolute',
+    left: 10,
+    right: 10,
+    bottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: radius.input,
+    backgroundColor: 'rgba(20, 16, 14, 0.58)',
+    gap: 2,
+  },
+  note: {
+    fontFamily: fontFamilies.bold,
+    fontSize: 20,
+    lineHeight: 26,
+    color: '#FFFFFF',
+  },
+  time: { color: 'rgba(255, 255, 255, 0.78)' },
+  body: { padding: 14, gap: spacing.sm },
+  noGps: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  actions: { flexDirection: 'row', gap: spacing.sm },
   secondary: { flex: 1 },
-  primary: { flex: 1.5 },
+  primary: { flex: 1.4 },
 });

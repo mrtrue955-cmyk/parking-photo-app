@@ -3,10 +3,11 @@ import { useRouter, type Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { radius, spacing } from '../theme';
+import { fontFamilies, radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
+import { Text } from './Text';
 
-export const TAB_BAR_HEIGHT = 72;
+export const TAB_BAR_HEIGHT = 76;
 const TAB_BAR_BOTTOM_GAP = 12;
 const TAB_BAR_CONTENT_GAP = 24;
 
@@ -55,13 +56,23 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         onPress={onPress}
         style={styles.tab}
       >
-        <View style={[styles.tabCircle, focused ? { backgroundColor: colors.chip } : null]}>
-          <Ionicons
-            name={focused ? item.icon : item.iconOff}
-            size={24}
-            color={focused ? colors.onChip : colors.textMuted}
-          />
-        </View>
+        <Ionicons
+          name={focused ? item.icon : item.iconOff}
+          size={22}
+          color={focused ? colors.text : colors.textMuted}
+        />
+        <Text
+          numberOfLines={1}
+          style={[
+            styles.label,
+            {
+              color: focused ? colors.text : colors.textMuted,
+              fontFamily: focused ? fontFamilies.semibold : fontFamilies.medium,
+            },
+          ]}
+        >
+          {item.label}
+        </Text>
       </Pressable>
     );
   }
@@ -79,10 +90,14 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
           onPress={() => router.push('/capture')}
           style={({ pressed }) => [
             styles.fab,
-            { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
+            {
+              backgroundColor: colors.primary,
+              borderColor: colors.surface,
+              opacity: pressed ? 0.85 : 1,
+            },
           ]}
         >
-          <Ionicons name="camera" size={28} color={colors.onPrimary} />
+          <Ionicons name="camera" size={26} color={colors.onPrimary} />
         </Pressable>
         {renderTab('history')}
       </View>
@@ -98,22 +113,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.tabBar,
     borderWidth: StyleSheet.hairlineWidth,
     shadowColor: '#000000',
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
     elevation: 8,
   },
-  tab: { width: 56, height: 56, alignItems: 'center', justifyContent: 'center' },
-  tabCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  tab: { width: 84, height: 56, alignItems: 'center', justifyContent: 'center', gap: 3 },
+  label: { fontSize: 10.5, lineHeight: 14, letterSpacing: 0.1 },
+  fab: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 4,
+    shadowColor: '#B45309',
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 10,
   },
-  fab: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
 });
