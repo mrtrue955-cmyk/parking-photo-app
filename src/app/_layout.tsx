@@ -57,6 +57,10 @@ function RootStack({ backgroundColor }: { backgroundColor: string }) {
         options={{ headerShown: true, header: () => <ScreenHeader title={t('capture.title')} /> }}
       />
       <Stack.Screen
+        name="stats"
+        options={{ headerShown: true, header: () => <ScreenHeader title={t('stats.title')} /> }}
+      />
+      <Stack.Screen
         name="settings"
         options={{ headerShown: true, header: () => <ScreenHeader title={t('settings.title')} /> }}
       />

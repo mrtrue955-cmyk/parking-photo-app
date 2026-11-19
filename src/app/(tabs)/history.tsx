@@ -9,6 +9,7 @@ import { groupHistoryByDay } from '../../domain/historyGroups';
 import { useParking } from '../../hooks/useParking';
 import { useI18n } from '../../i18n';
 import type { TranslationKey } from '../../i18n/translations';
+import { TextButton } from '../../ui/components/Button';
 import { EmptyState } from '../../ui/components/EmptyState';
 import { HistoryCard } from '../../ui/components/HistoryCard';
 import { SegmentedTabs } from '../../ui/components/SegmentedTabs';
@@ -55,7 +56,10 @@ export default function History() {
       ]}
       ListHeaderComponent={
         <View style={styles.header}>
-          <Text variant="title">{t('history.title')}</Text>
+          <View style={styles.headerRow}>
+            <Text variant="title">{t('history.title')}</Text>
+            <TextButton title={t('stats.open')} onPress={() => router.push('/stats')} />
+          </View>
           <SegmentedTabs
             options={FILTERS.map((item) => ({ value: item.value, label: t(item.labelKey) }))}
             value={filter}
@@ -95,6 +99,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { paddingHorizontal: spacing.screen },
   header: { gap: spacing.md, marginBottom: spacing.md },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionHeader: { paddingVertical: spacing.sm, letterSpacing: 0.2 },
   separator: { height: spacing.sm },
 });
