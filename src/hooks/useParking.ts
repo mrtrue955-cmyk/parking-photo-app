@@ -10,7 +10,6 @@ import { pickCurrent } from '../domain/current';
 import type { ParkingRecord } from '../domain/types';
 import { onParkingChanged } from './parkingEvents';
 import { syncGeofence } from '../native/geofence';
-import { dismissParkedNotification } from '../native/parkedNotification';
 import { syncReminders } from '../native/reminders';
 
 export function useParking() {
@@ -45,7 +44,6 @@ export function useParking() {
     const stamp = Date.now();
     syncParkedWidget(parkedWidgetProps(current, stamp, locale));
     syncParkedActivity(parkedActivityProps(current, stamp, locale));
-    if (!current) await dismissParkedNotification();
     try {
       const settings = await (await getParkingService()).getSettings();
       await syncGeofence(current, settings.geofenceEnabled);

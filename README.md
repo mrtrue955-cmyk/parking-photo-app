@@ -23,7 +23,14 @@ recognition is downloaded by Google Play services on first use.
 - Expired photos are purged whenever the app opens or returns to the
   foreground, with an OS-scheduled background task as a best-effort extra.
 
-The UI is in Vietnamese.
+The UI is in Vietnamese and English.
+
+Notifications are limited to two cases: a reminder the day before a photo is
+deleted, and an optional "you left the parking area" alert from the geofence.
+Saving a spot posts no notification — the widget and the Live Activity already
+show it.
+
+The UI is in Vietnamese and English.
 
 ## Stack
 

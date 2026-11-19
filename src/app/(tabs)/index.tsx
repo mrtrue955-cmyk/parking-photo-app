@@ -7,7 +7,6 @@ import { useParking } from '../../hooks/useParking';
 import { useSettings } from '../../hooks/useSettings';
 import { useI18n } from '../../i18n';
 import { directionsUrl } from '../../native/directions';
-import { dismissParkedNotification } from '../../native/parkedNotification';
 import { IconButton, TextButton } from '../../ui/components/Button';
 import { CaptureCta } from '../../ui/components/CaptureCta';
 import { EmptyState } from '../../ui/components/EmptyState';
@@ -42,7 +41,6 @@ export default function Home() {
     try {
       await (await getParkingService()).collectCurrent();
       successFeedback();
-      await dismissParkedNotification();
       await refresh();
     } catch {
       Alert.alert(t('common.errorTitle'), t('common.errorBody'));

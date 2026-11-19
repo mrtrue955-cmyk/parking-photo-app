@@ -1,8 +1,6 @@
 import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 import { getParkingService } from '../container';
-import { pickCurrent } from '../domain/current';
-import { dismissParkedNotification } from '../native/parkedNotification';
 import { syncReminders } from '../native/reminders';
 
 const TASK_NAME = 'purge-expired-parking-photos';
@@ -13,7 +11,6 @@ TaskManager.defineTask(TASK_NAME, async () => {
     const service = await getParkingService();
     await service.purgeExpired();
     const list = await service.list();
-    if (!pickCurrent(list)) await dismissParkedNotification();
     await syncReminders(list, Date.now());
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch {

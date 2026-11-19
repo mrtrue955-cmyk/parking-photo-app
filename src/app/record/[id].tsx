@@ -19,7 +19,6 @@ import { historyStatus } from '../../domain/history';
 import { useParking } from '../../hooks/useParking';
 import { useI18n } from '../../i18n';
 import { directionsUrl } from '../../native/directions';
-import { dismissParkedNotification } from '../../native/parkedNotification';
 import { GalleryPermissionDeniedError } from '../../services/ports';
 import { IconButton, PrimaryButton, SecondaryButton, TextButton } from '../../ui/components/Button';
 import { ExpiryBar } from '../../ui/components/ExpiryBar';
@@ -107,7 +106,6 @@ export default function RecordDetail() {
         onPress: async () => {
           if (busy) return;
           setBusy(true);
-          const wasCurrent = pickCurrent(records)?.id === recordId;
           try {
             await (await getParkingService()).deleteNow(recordId);
           } catch {
@@ -116,7 +114,6 @@ export default function RecordDetail() {
             return;
           }
           warningFeedback();
-          if (wasCurrent) await dismissParkedNotification();
           setBusy(false);
           router.back();
         },
