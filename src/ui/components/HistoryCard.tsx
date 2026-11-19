@@ -5,7 +5,6 @@ import type { ParkingRecord } from '../../domain/types';
 import { formatTimeAgo } from '../format';
 import { radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
-import { Chip } from './Chip';
 import { ExpiryBar } from './ExpiryBar';
 import { Text } from './Text';
 
@@ -27,7 +26,6 @@ export function HistoryCard({ record, photoUri, now, onPress }: Props) {
     >
       <Image source={{ uri: photoUri }} style={styles.thumb} contentFit="cover" />
       <View style={styles.body}>
-        <Chip label={status.label} tone={status.tone} />
         <Text variant="heading" numberOfLines={1}>
           {title}
         </Text>

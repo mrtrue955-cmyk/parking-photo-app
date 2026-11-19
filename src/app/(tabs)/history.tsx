@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { SectionList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPhotoFiles } from '../../container';
 import { historyOf } from '../../domain/current';
 import { filterHistory, type HistoryFilter } from '../../domain/history';
+import { groupHistoryByDay } from '../../domain/historyGroups';
 import { useParking } from '../../hooks/useParking';
 import { EmptyState } from '../../ui/components/EmptyState';
 import { HistoryCard } from '../../ui/components/HistoryCard';
@@ -38,10 +39,11 @@ export default function History() {
   if (!loaded) return <View style={[styles.fill, { backgroundColor: colors.background }]} />;
 
   const visible = filterHistory(historyOf(records), filter, now);
+  const sections = groupHistoryByDay(visible, now);
 
   return (
-    <FlatList
-      data={visible}
+    <SectionList
+      sections={sections}
       keyExtractor={(item) => item.id}
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={[
@@ -54,7 +56,17 @@ export default function History() {
           <SegmentedTabs options={OPTIONS} value={filter} onChange={setFilter} />
         </View>
       }
-      ListEmptyComponent={<EmptyState icon="time" text={EMPTY_TEXT[filter]} />}
+      ListEmptyComponent={<EmptyState icon="time-outline" text={EMPTY_TEXT[filter]} />}
+      stickySectionHeadersEnabled
+      renderSectionHeader={({ section }) => (
+        <Text
+          variant="caption"
+          muted
+          style={[styles.sectionHeader, { backgroundColor: colors.background }]}
+        >
+          {section.label}
+        </Text>
+      )}
       ItemSeparatorComponent={Separator}
       renderItem={({ item }) => (
         <HistoryCard
@@ -76,5 +88,6 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { paddingHorizontal: spacing.screen },
   header: { gap: spacing.md, marginBottom: spacing.md },
+  sectionHeader: { paddingVertical: spacing.sm, letterSpacing: 0.2 },
   separator: { height: spacing.sm },
 });

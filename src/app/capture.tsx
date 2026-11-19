@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Image } from 'expo-image';
 import * as Notifications from 'expo-notifications';
@@ -9,12 +10,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService } from '../container';
+import { canQuickEdit, parseNote, setLevel, setPillar } from '../domain/noteEditor';
 import type { ParkingRecord } from '../domain/types';
 import { getCoords } from '../native/location';
 import { showParkedNotification } from '../native/parkedNotification';
@@ -27,6 +30,15 @@ import { fontFamilies, radius, spacing } from '../ui/theme';
 import { useTheme } from '../ui/useTheme';
 
 type Coords = { lat: number; lng: number } | null;
+type SuggestionStatus = 'idle' | 'reading' | 'suggested';
+
+const LEVELS = ['B1', 'B2', 'B3'] as const;
+
+const STATUS_LABEL: Record<SuggestionStatus, string | null> = {
+  idle: null,
+  reading: 'Đang đọc ảnh…',
+  suggested: 'Gợi ý từ ảnh',
+};
 
 export default function CaptureScreen() {
   const router = useRouter();
@@ -39,9 +51,7 @@ export default function CaptureScreen() {
   const [coords, setCoords] = useState<Coords>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
-  const [suggestionStatus, setSuggestionStatus] = useState<'idle' | 'reading' | 'suggested'>(
-    'idle',
-  );
+  const [suggestionStatus, setSuggestionStatus] = useState<SuggestionStatus>('idle');
   const suggestionRequest = useRef(0);
   const noteEdited = useRef(false);
 
@@ -161,65 +171,193 @@ export default function CaptureScreen() {
     }
   }
 
+  function editNote(next: string) {
+    noteEdited.current = true;
+    setNote(next);
+  }
+
+  function chooseLevel(level: string) {
+    setSuggestionStatus('idle');
+    editNote(setLevel(note, level));
+  }
+
+  function stepPillar(delta: number) {
+    const current = parseNote(note).pillar;
+    const next = current === null ? (delta > 0 ? 1 : 1) : current + delta;
+    setSuggestionStatus('idle');
+    editNote(setPillar(note, next));
+  }
+
   if (photoUri) {
+    const parts = parseNote(note);
+    const statusLabel = STATUS_LABEL[suggestionStatus];
     return (
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={headerHeight - insets.bottom}
         style={{ flex: 1, backgroundColor: colors.background }}
       >
-        <View style={[styles.container, { paddingBottom: spacing.screen + insets.bottom }]}>
-          <Image
-            source={{ uri: photoUri }}
-            style={styles.preview}
-            contentFit="cover"
-            accessible
-            accessibilityLabel="Ảnh vừa chụp"
+        <ScrollView
+          contentContainerStyle={[
+            styles.resultContent,
+            { paddingBottom: spacing.screen + insets.bottom },
+          ]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.previewWrap}>
+            <Image
+              source={{ uri: photoUri }}
+              style={styles.preview}
+              contentFit="cover"
+              accessible
+              accessibilityLabel="Ảnh vừa chụp"
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Chụp lại ảnh khác"
+              onPress={retake}
+              style={styles.retakeChip}
+            >
+              <Ionicons name="refresh" size={13} color="#FFFFFF" />
+              <Text variant="caption" style={styles.retakeText}>
+                Chụp lại
+              </Text>
+            </Pressable>
+          </View>
+
+          <View
+            style={[styles.panel, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
+            <View style={styles.panelHead}>
+              <Text variant="heading">Kiểm tra vị trí</Text>
+              {statusLabel ? (
+                <View style={[styles.statusPill, { backgroundColor: colors.surfaceAlt }]}>
+                  {suggestionStatus === 'reading' ? (
+                    <ActivityIndicator size="small" color={colors.accent} />
+                  ) : (
+                    <Ionicons name="sparkles" size={12} color={colors.accent} />
+                  )}
+                  <Text variant="caption" style={{ color: colors.accent }}>
+                    {statusLabel}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            <View style={styles.gpsRow}>
+              <Ionicons
+                name={coords ? 'location' : 'location-outline'}
+                size={13}
+                color={coords ? colors.accent : colors.textMuted}
+              />
+              <Text variant="caption" muted>
+                {coords ? 'Đã lấy vị trí GPS' : 'Không lấy được GPS, sẽ không có dẫn đường'}
+              </Text>
+            </View>
+
+            {canQuickEdit(note) ? (
+              <>
+                <View style={styles.levelRow}>
+                  {LEVELS.map((level) => {
+                    const active = parts.level === level;
+                    return (
+                      <Pressable
+                        key={level}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        accessibilityLabel={`Tầng ${level}`}
+                        onPress={() => chooseLevel(level)}
+                        style={[
+                          styles.levelChip,
+                          {
+                            backgroundColor: active ? colors.primary : colors.surfaceAlt,
+                            borderColor: active ? colors.primary : colors.border,
+                          },
+                        ]}
+                      >
+                        <Text
+                          variant="caption"
+                          style={{ color: active ? colors.onPrimary : colors.text }}
+                        >
+                          {level}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                  <View style={styles.stepper}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Giảm số cột"
+                      onPress={() => stepPillar(-1)}
+                      style={[styles.stepBtn, { borderColor: colors.border }]}
+                    >
+                      <Ionicons name="remove" size={16} color={colors.text} />
+                    </Pressable>
+                    <Text variant="button" style={styles.stepValue}>
+                      {parts.pillar === null ? 'Số cột' : `Cột ${parts.pillar}`}
+                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Tăng số cột"
+                      onPress={() => stepPillar(1)}
+                      style={[styles.stepBtn, { borderColor: colors.border }]}
+                    >
+                      <Ionicons name="add" size={16} color={colors.text} />
+                    </Pressable>
+                  </View>
+                </View>
+              </>
+            ) : null}
+
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              placeholder="Ghi chú (ví dụ: B2, cột 14)"
+              placeholderTextColor={colors.textMuted}
+              cursorColor={colors.accent}
+              selectionColor={colors.primary}
+              accessibilityLabel="Ghi chú vị trí xe"
+              value={note}
+              onChangeText={(text) => {
+                setSuggestionStatus('idle');
+                editNote(text);
+              }}
+              maxLength={80}
+            />
+          </View>
+
+          <PrimaryButton
+            title={busy ? 'Đang lưu...' : 'Lưu vị trí'}
+            onPress={save}
+            disabled={busy}
           />
-          <Text variant="caption" muted>
-            {coords ? 'Đã lấy vị trí GPS' : 'Không lấy được GPS, sẽ không có dẫn đường'}
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            placeholder="Ghi chú (ví dụ: B2, cột 14)"
-            placeholderTextColor={colors.textMuted}
-            cursorColor={colors.accent}
-            selectionColor={colors.primary}
-            accessibilityLabel="Ghi chú vị trí xe"
-            value={note}
-            onChangeText={(text) => {
-              noteEdited.current = true;
-              setNote(text);
-              setSuggestionStatus('idle');
-            }}
-            maxLength={80}
-          />
-          {suggestionStatus !== 'idle' ? (
-            <Text variant="caption" muted accessibilityLiveRegion="polite">
-              {suggestionStatus === 'reading' ? 'Đang đọc ảnh...' : 'Gợi ý từ ảnh, bạn có thể sửa'}
-            </Text>
-          ) : null}
-          <PrimaryButton title={busy ? 'Đang lưu...' : 'Lưu'} onPress={save} disabled={busy} />
-          <SecondaryButton title="Chụp lại" onPress={retake} disabled={busy} />
-        </View>
+          <SecondaryButton title="Chụp ảnh khác" onPress={retake} disabled={busy} />
+        </ScrollView>
       </KeyboardAvoidingView>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text variant="caption" muted style={styles.hint}>
-        Chụp gần số cột để app tự đọc
-      </Text>
       <View style={styles.camera}>
         <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
+        <View style={styles.brackets} pointerEvents="none">
+          <View style={[styles.corner, styles.topLeft]} />
+          <View style={[styles.corner, styles.topRight]} />
+          <View style={[styles.corner, styles.bottomLeft]} />
+          <View style={[styles.corner, styles.bottomRight]} />
+        </View>
+        <View style={styles.cameraHint} pointerEvents="none">
+          <Text variant="caption" style={styles.cameraHintText}>
+            Đưa số cột vào khung
+          </Text>
+        </View>
       </View>
       <View style={[styles.shutterRow, { paddingBottom: spacing.sm + insets.bottom }]}>
         <Pressable
@@ -230,8 +368,13 @@ export default function CaptureScreen() {
           onPress={takePhoto}
           style={[styles.shutterOuter, { borderColor: colors.text, opacity: busy ? 0.5 : 1 }]}
         >
-          <View style={[styles.shutterInner, { backgroundColor: colors.primary }]} />
+          <View style={[styles.shutterInner, { backgroundColor: colors.primary }]}>
+            {busy ? <ActivityIndicator color={colors.onPrimary} /> : null}
+          </View>
         </Pressable>
+        <Text variant="caption" muted>
+          Chạm để chụp
+        </Text>
       </View>
     </View>
   );
@@ -247,19 +390,36 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   message: { textAlign: 'center' },
-  hint: { textAlign: 'center' },
-  camera: { flex: 1, borderRadius: radius.card, overflow: 'hidden' },
-  preview: { flex: 1, borderRadius: radius.card },
-  input: {
-    borderWidth: 1,
-    borderRadius: radius.input,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    minHeight: 48,
-    fontFamily: fontFamilies.regular,
-    fontSize: 16,
+  camera: { flex: 1, borderRadius: radius.card, overflow: 'hidden', backgroundColor: '#2B2724' },
+  brackets: { position: 'absolute', top: 18, right: 18, bottom: 18, left: 18 },
+  corner: { position: 'absolute', width: 26, height: 26, borderColor: 'rgba(255,255,255,0.9)' },
+  topLeft: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 10 },
+  topRight: { top: 0, right: 0, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 10 },
+  bottomLeft: {
+    bottom: 0,
+    left: 0,
+    borderBottomWidth: 3,
+    borderLeftWidth: 3,
+    borderBottomLeftRadius: 10,
   },
-  shutterRow: { alignItems: 'center' },
+  bottomRight: {
+    bottom: 0,
+    right: 0,
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
+    borderBottomRightRadius: 10,
+  },
+  cameraHint: {
+    position: 'absolute',
+    bottom: 16,
+    alignSelf: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(20, 16, 14, 0.5)',
+  },
+  cameraHintText: { color: '#FFFFFF' },
+  shutterRow: { alignItems: 'center', gap: 6 },
   shutterOuter: {
     width: 76,
     height: 76,
@@ -268,5 +428,75 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shutterInner: { width: 56, height: 56, borderRadius: 28 },
+  shutterInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resultContent: { padding: spacing.screen, gap: spacing.md },
+  previewWrap: { borderRadius: radius.card, overflow: 'hidden' },
+  preview: { width: '100%', height: 220 },
+  retakeChip: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(20, 16, 14, 0.55)',
+  },
+  retakeText: { color: '#FFFFFF' },
+  panel: {
+    borderRadius: radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 14,
+    gap: spacing.sm,
+  },
+  panelHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
+  gpsRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -4 },
+  levelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.xs },
+  levelChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  stepper: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 'auto' },
+  stepBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepValue: { minWidth: 66, textAlign: 'center' },
+  input: {
+    borderWidth: 1,
+    borderRadius: radius.input,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    minHeight: 48,
+    fontFamily: fontFamilies.regular,
+    fontSize: 16,
+    marginTop: spacing.xs,
+  },
 });
