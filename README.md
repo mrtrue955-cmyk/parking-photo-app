@@ -40,6 +40,9 @@ npx tsc --noEmit               # typecheck
 npx expo run:ios --device      # or: npx expo run:android
 ```
 
+Shipping to TestFlight: `npm run build:ios` then `npm run submit:ios`.
+See `docs/RELEASE.md` for accounts, build numbers and store requirements.
+
 The app needs a development build; Expo Go does not include every native module
 used here.
 

@@ -57,7 +57,12 @@
     "lint": "expo lint",
     "test": "jest",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\"",
+    "build:dev": "eas build -p ios --profile development",
+    "build:preview": "eas build -p ios --profile preview",
+    "build:ios": "eas build -p ios --profile production",
+    "submit:ios": "eas submit -p ios --profile production",
+    "build:android": "eas build -p android --profile production"
   },
   "private": true,
   "jest": {
