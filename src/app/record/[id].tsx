@@ -17,6 +17,7 @@ import { pickCurrent } from '../../domain/current';
 import { daysLeft } from '../../domain/expiry';
 import { historyStatus } from '../../domain/history';
 import { useParking } from '../../hooks/useParking';
+import { useI18n } from '../../i18n';
 import { directionsUrl } from '../../native/directions';
 import { dismissParkedNotification } from '../../native/parkedNotification';
 import { GalleryPermissionDeniedError } from '../../services/ports';
@@ -31,6 +32,7 @@ export default function RecordDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors } = useTheme();
+  const { t, formatDate } = useI18n();
   const insets = useSafeAreaInsets();
   const { records, loaded, now, refresh } = useParking();
   const [busy, setBusy] = useState(false);
@@ -49,7 +51,7 @@ export default function RecordDetail() {
   if (!record) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
-        <Text muted>Ảnh không còn tồn tại.</Text>
+        <Text muted>{t('detail.notFound')}</Text>
       </View>
     );
   }
@@ -68,12 +70,12 @@ export default function RecordDetail() {
       await (await getParkingService()).keep(recordId);
       successFeedback();
       await refresh();
-      Alert.alert('Đã giữ lại', 'Ảnh đã được lưu vào thư viện và sẽ không bị tự xoá.');
+      Alert.alert(t('detail.keepDoneTitle'), t('detail.keepDoneBody'));
     } catch (error) {
       if (error instanceof GalleryPermissionDeniedError) {
-        Alert.alert('Không giữ lại được', 'Hãy cho phép app lưu ảnh vào thư viện trong Cài đặt.');
+        Alert.alert(t('detail.keepDeniedTitle'), t('detail.keepDeniedBody'));
       } else {
-        Alert.alert('Không giữ lại được', 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+        Alert.alert(t('detail.keepDeniedTitle'), t('detail.keepErrorBody'));
       }
     } finally {
       setBusy(false);
@@ -88,7 +90,7 @@ export default function RecordDetail() {
       successFeedback();
       setEditing(false);
     } catch {
-      Alert.alert('Không lưu được', 'Vui lòng thử lại.');
+      Alert.alert(t('detail.saveNoteError'), t('common.errorBody'));
     } finally {
       setSaving(false);
     }
@@ -96,10 +98,10 @@ export default function RecordDetail() {
 
   function confirmDelete() {
     if (busy) return;
-    Alert.alert('Xoá ảnh này?', 'Ảnh sẽ bị xoá ngay.', [
-      { text: 'Huỷ', style: 'cancel' },
+    Alert.alert(t('detail.deleteTitle'), t('detail.deleteBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Xoá',
+        text: t('detail.deleteConfirm'),
         style: 'destructive',
         onPress: async () => {
           if (busy) return;
@@ -108,7 +110,7 @@ export default function RecordDetail() {
           try {
             await (await getParkingService()).deleteNow(recordId);
           } catch {
-            Alert.alert('Không xoá được', 'Vui lòng thử lại.');
+            Alert.alert(t('detail.deleteErrorTitle'), t('common.errorBody'));
             setBusy(false);
             return;
           }
@@ -121,13 +123,14 @@ export default function RecordDetail() {
     ]);
   }
 
+  const statusLabel = t(status.labelKey, { count: status.count ?? 0 });
   const badge = isCurrent
-    ? { label: 'Đang đậu', backgroundColor: colors.primary, color: colors.onPrimary }
+    ? { label: t('spot.parked'), backgroundColor: colors.primary, color: colors.onPrimary }
     : status.tone === 'danger'
-      ? { label: status.label, backgroundColor: colors.dangerChip, color: colors.danger }
+      ? { label: statusLabel, backgroundColor: colors.dangerChip, color: colors.danger }
       : status.tone === 'primary'
-        ? { label: status.label, backgroundColor: colors.chip, color: colors.onChip }
-        : { label: status.label, backgroundColor: colors.surfaceAlt, color: colors.text };
+        ? { label: statusLabel, backgroundColor: colors.chip, color: colors.onChip }
+        : { label: statusLabel, backgroundColor: colors.surfaceAlt, color: colors.text };
 
   return (
     <ScrollView
@@ -140,7 +143,7 @@ export default function RecordDetail() {
           style={styles.photo}
           contentFit="cover"
           accessible
-          accessibilityLabel="Ảnh vị trí xe"
+          accessibilityLabel={t('capture.photoA11y')}
         />
         <View style={styles.topRow}>
           <View style={[styles.badge, { backgroundColor: badge.backgroundColor }]}>
@@ -155,7 +158,7 @@ export default function RecordDetail() {
             <View style={styles.countdown}>
               <Ionicons name="time-outline" size={12} color="#FFFFFF" />
               <Text variant="caption" style={styles.countdownText}>
-                còn {remaining} ngày
+                {t('spot.daysLeft', { count: remaining })}
               </Text>
             </View>
           ) : null}
@@ -170,8 +173,8 @@ export default function RecordDetail() {
               onChangeText={setDraft}
               autoFocus
               maxLength={80}
-              accessibilityLabel="Sửa ghi chú vị trí xe"
-              placeholder="Ví dụ: B2, cột 14"
+              accessibilityLabel={t('detail.editNote')}
+              placeholder={t('detail.notePlaceholder')}
               placeholderTextColor={colors.textMuted}
               style={[
                 styles.input,
@@ -183,9 +186,13 @@ export default function RecordDetail() {
               ]}
             />
             <View style={styles.editActions}>
-              <TextButton title="Huỷ" onPress={() => setEditing(false)} disabled={saving} />
+              <TextButton
+                title={t('common.cancel')}
+                onPress={() => setEditing(false)}
+                disabled={saving}
+              />
               <PrimaryButton
-                title={saving ? 'Đang lưu…' : 'Lưu ghi chú'}
+                title={saving ? t('capture.saving') : t('detail.saveNote')}
                 onPress={saveNote}
                 disabled={saving}
                 style={styles.saveButton}
@@ -201,12 +208,12 @@ export default function RecordDetail() {
               minimumFontScale={0.6}
               style={styles.noteText}
             >
-              {record.note || 'Không có ghi chú'}
+              {record.note || t('spot.noNote')}
             </Text>
             <IconButton
               icon="pencil"
               size={38}
-              accessibilityLabel="Sửa ghi chú"
+              accessibilityLabel={t('detail.editNote')}
               onPress={() => {
                 setDraft(record.note);
                 setEditing(true);
@@ -217,21 +224,14 @@ export default function RecordDetail() {
         <View style={styles.metaRow}>
           <Ionicons name="time-outline" size={13} color={colors.textMuted} />
           <Text variant="caption" muted>
-            Chụp lúc{' '}
-            {new Date(record.createdAt).toLocaleString('vi-VN', {
-              hour: '2-digit',
-              minute: '2-digit',
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-            })}
+            {t('detail.capturedAt', { date: formatDate(record.createdAt) })}
           </Text>
         </View>
       </View>
 
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Text variant="caption" muted>
-          {record.expiresAt === null ? 'Đã giữ lại trong thư viện ảnh' : 'Hạn tự xoá'}
+          {record.expiresAt === null ? t('detail.keptLabel') : t('detail.expiryLabel')}
         </Text>
         <ExpiryBar expiresAt={record.expiresAt} now={now} />
         {hasGps ? (
@@ -245,7 +245,7 @@ export default function RecordDetail() {
           <View style={styles.metaRow}>
             <Ionicons name="location-outline" size={13} color={colors.textMuted} />
             <Text variant="caption" muted>
-              Không có toạ độ cho vị trí này
+              {t('detail.noCoords')}
             </Text>
           </View>
         )}
@@ -253,20 +253,25 @@ export default function RecordDetail() {
 
       {hasGps ? (
         <PrimaryButton
-          title="Dẫn đường về xe"
+          title={t('detail.directions')}
           onPress={() =>
             Linking.openURL(directionsUrl(record.lat!, record.lng!)).catch(() =>
-              Alert.alert('Không mở được bản đồ', 'Hãy cài ứng dụng bản đồ rồi thử lại.'),
+              Alert.alert(t('detail.mapErrorTitle'), t('detail.mapErrorBody')),
             )
           }
         />
       ) : null}
       {record.expiresAt !== null ? (
-        <SecondaryButton title="Giữ lại" onPress={keep} disabled={busy} />
+        <SecondaryButton title={t('detail.keep')} onPress={keep} disabled={busy} />
       ) : null}
 
       <View style={styles.dangerZone}>
-        <TextButton title="Xoá ngay" tone="danger" onPress={confirmDelete} disabled={busy} />
+        <TextButton
+          title={t('detail.delete')}
+          tone="danger"
+          onPress={confirmDelete}
+          disabled={busy}
+        />
       </View>
     </ScrollView>
   );

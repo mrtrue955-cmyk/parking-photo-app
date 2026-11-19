@@ -1,3 +1,5 @@
+import { translate } from '../i18n/translate';
+import type { Locale } from '../i18n/translations';
 const MAX_LENGTH = 80;
 
 // Keywords may appear anywhere in a line (the text is normalized first).
@@ -78,16 +80,16 @@ function compactCode(code: string): string {
   return code.replace(/[\s-]/g, '');
 }
 
-function formatLevel(captured: string, basement: boolean): string {
+function formatLevel(captured: string, basement: boolean, locale: Locale): string {
   if (/^[BLP]/.test(captured)) return captured;
-  return basement ? `B${captured}` : `Tầng ${captured}`;
+  return basement ? `B${captured}` : translate(locale, 'note.level', { level: captured });
 }
 
 /**
  * Turns the text lines recognized in a parking photo into a note like "B2, cột 14".
  * Favors precision over recall; returns null when nothing looks like a location.
  */
-export function suggestLocationNote(lines: string[]): string | null {
+export function suggestLocationNote(lines: string[], locale: Locale = 'vi'): string | null {
   let level: string | null = null;
   let zone: string | null = null;
   let pillar: string | null = null;
@@ -105,7 +107,7 @@ export function suggestLocationNote(lines: string[]): string | null {
     if (levelMatch) {
       keywordMatched = true;
       levelKeywordMatched = true;
-      if (level === null) level = formatLevel(levelMatch[2], levelMatch[1] !== undefined);
+      if (level === null) level = formatLevel(levelMatch[2], levelMatch[1] !== undefined, locale);
     } else if (basementMatch) {
       keywordMatched = true;
       levelKeywordMatched = true;
@@ -114,12 +116,13 @@ export function suggestLocationNote(lines: string[]): string | null {
     const zoneMatch = ZONE_KEYWORD.exec(line);
     if (zoneMatch) {
       keywordMatched = true;
-      if (zone === null) zone = `khu ${zoneMatch[1]}`;
+      if (zone === null) zone = translate(locale, 'note.zone', { zone: zoneMatch[1] });
     }
     const pillarMatch = PILLAR_KEYWORD.exec(line);
     if (pillarMatch) {
       keywordMatched = true;
-      if (pillar === null) pillar = `cột ${compactCode(pillarMatch[1])}`;
+      if (pillar === null)
+        pillar = translate(locale, 'note.pillar', { code: compactCode(pillarMatch[1]) });
       if (level === null && !levelKeywordMatched) {
         const token = LEVEL_TOKEN.exec(line.replace(pillarMatch[0], ' '));
         if (token) level = token[1];
@@ -136,14 +139,16 @@ export function suggestLocationNote(lines: string[]): string | null {
     if (combined) {
       if (level === null) level = `${combined[1]}${combined[2]}`;
       if (pillar === null) {
-        pillar = combined[3] ? `${combined[3]}${combined[4]}` : `cột ${combined[4]}`;
+        pillar = combined[3]
+          ? `${combined[3]}${combined[4]}`
+          : translate(locale, 'note.pillar', { code: combined[4] });
       }
       continue;
     }
     const spaced = SPACED_COMBINED_CODE.exec(code);
     if (spaced) {
       if (level === null) level = `${spaced[1]}${spaced[2]}`;
-      if (pillar === null) pillar = `cột ${spaced[3]}`;
+      if (pillar === null) pillar = translate(locale, 'note.pillar', { code: spaced[3] });
       continue;
     }
     const levelCode = LEVEL_CODE.exec(code);
@@ -161,7 +166,10 @@ export function suggestLocationNote(lines: string[]): string | null {
     const [letter] = [...loneLetters];
     const uniqueLetter = loneLetters.size === 1;
     if (level !== null || zone !== null || uniqueLetter) {
-      pillar = uniqueLetter && zone === null ? `${letter}${number}` : `cột ${number}`;
+      pillar =
+        uniqueLetter && zone === null
+          ? `${letter}${number}`
+          : translate(locale, 'note.pillar', { code: number });
     }
   }
 

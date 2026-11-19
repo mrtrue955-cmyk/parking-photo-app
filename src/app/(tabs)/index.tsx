@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService, getPhotoFiles } from '../../container';
 import { historyOf, pickCurrent } from '../../domain/current';
 import { useParking } from '../../hooks/useParking';
+import { useSettings } from '../../hooks/useSettings';
+import { useI18n } from '../../i18n';
 import { directionsUrl } from '../../native/directions';
 import { dismissParkedNotification } from '../../native/parkedNotification';
 import { IconButton, TextButton } from '../../ui/components/Button';
@@ -20,12 +22,15 @@ import { useTheme } from '../../ui/useTheme';
 export default function Home() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
   const bottomSpace = useTabBarSpace();
   const { records, loaded, now, refresh } = useParking();
+  const { settings } = useSettings();
   const files = getPhotoFiles();
   const current = pickCurrent(records);
   const recent = historyOf(records).slice(0, 3);
+  const retentionDays = settings?.retentionDays ?? 30;
 
   if (!loaded) return <View style={[styles.fill, { backgroundColor: colors.background }]} />;
 
@@ -40,7 +45,7 @@ export default function Home() {
       await dismissParkedNotification();
       await refresh();
     } catch {
-      Alert.alert('Có lỗi xảy ra', 'Vui lòng thử lại.');
+      Alert.alert(t('common.errorTitle'), t('common.errorBody'));
     }
   }
 
@@ -54,10 +59,10 @@ export default function Home() {
       ]}
     >
       <View style={styles.headerRow}>
-        <Text variant="title">Xe của tôi</Text>
+        <Text variant="title">{t('tabs.home')}</Text>
         <IconButton
           icon="settings-outline"
-          accessibilityLabel="Cài đặt"
+          accessibilityLabel={t('home.settings')}
           onPress={() => router.push('/settings')}
         />
       </View>
@@ -69,20 +74,23 @@ export default function Home() {
           onOpen={() => openRecord(current.id)}
           onNavigate={() =>
             Linking.openURL(directionsUrl(current.lat!, current.lng!)).catch(() =>
-              Alert.alert('Không mở được bản đồ', 'Hãy cài ứng dụng bản đồ rồi thử lại.'),
+              Alert.alert(t('detail.mapErrorTitle'), t('detail.mapErrorBody')),
             )
           }
           onCollect={collect}
         />
       ) : (
         <View style={styles.emptyBlock}>
-          <View style={styles.spacer} />
           <EmptyState
             icon="camera-outline"
-            title="Chưa có vị trí nào"
-            text="Chụp cây cột ở chỗ bạn đậu. App đọc tầng và số cột, ảnh tự xoá sau 30 ngày."
-            steps={['Chụp cột', 'Lưu vị trí', 'Tự xoá']}
-            note="Ảnh chỉ nằm trên máy này, không tải lên mạng."
+            title={t('home.empty.title')}
+            text={t('home.empty.text', { days: retentionDays })}
+            steps={[
+              t('home.empty.step.capture'),
+              t('home.empty.step.save'),
+              t('home.empty.step.expire'),
+            ]}
+            note={t('home.empty.note')}
           />
           <CaptureCta onPress={() => router.push('/capture')} />
         </View>
@@ -90,8 +98,8 @@ export default function Home() {
       {recent.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text variant="heading">Gần đây</Text>
-            <TextButton title="Xem tất cả" onPress={() => router.push('/history')} />
+            <Text variant="heading">{t('home.recent')}</Text>
+            <TextButton title={t('home.seeAll')} onPress={() => router.push('/history')} />
           </View>
           {recent.map((record) => (
             <HistoryCard

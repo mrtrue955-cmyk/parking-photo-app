@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { registerPurgeTask } from '../background/purgeTask';
 import { useParkedNotificationResponses } from '../hooks/useParkedNotificationResponses';
+import { I18nProvider, useI18n } from '../i18n';
 import '../native/geofence';
 import '../native/notificationSetup';
 import { registerParkedCategories } from '../native/parkedNotification';
@@ -22,10 +23,6 @@ export default function RootLayout() {
   useParkedNotificationResponses();
 
   useEffect(() => {
-    registerParkedCategories();
-  }, []);
-
-  useEffect(() => {
     registerPurgeTask().catch(() => {});
   }, []);
 
@@ -37,28 +34,36 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <>
+    <I18nProvider>
       <StatusBar style="auto" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="capture"
-          options={{ headerShown: true, header: () => <ScreenHeader title="Chụp vị trí xe" /> }}
-        />
-        <Stack.Screen
-          name="settings"
-          options={{ headerShown: true, header: () => <ScreenHeader title="Cài đặt" /> }}
-        />
-        <Stack.Screen
-          name="record/[id]"
-          options={{ headerShown: true, header: () => <ScreenHeader title="Chi tiết" /> }}
-        />
-      </Stack>
-    </>
+      <RootStack backgroundColor={colors.background} />
+    </I18nProvider>
+  );
+}
+
+function RootStack({ backgroundColor }: { backgroundColor: string }) {
+  const { t, locale } = useI18n();
+
+  // Notification action titles are baked into the OS category, so they follow the locale.
+  useEffect(() => {
+    registerParkedCategories(locale);
+  }, [locale]);
+
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor } }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen
+        name="capture"
+        options={{ headerShown: true, header: () => <ScreenHeader title={t('capture.title')} /> }}
+      />
+      <Stack.Screen
+        name="settings"
+        options={{ headerShown: true, header: () => <ScreenHeader title={t('settings.title')} /> }}
+      />
+      <Stack.Screen
+        name="record/[id]"
+        options={{ headerShown: true, header: () => <ScreenHeader title={t('detail.title')} /> }}
+      />
+    </Stack>
   );
 }

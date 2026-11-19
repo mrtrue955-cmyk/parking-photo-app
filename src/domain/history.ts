@@ -1,3 +1,4 @@
+import type { TranslationKey } from '../i18n/translations';
 import { daysLeft, isExpiringSoon } from './expiry';
 import type { ParkingRecord } from './types';
 
@@ -18,10 +19,16 @@ export function filterHistory(
   }
 }
 
-export type HistoryStatus = { label: string; tone: 'primary' | 'danger' | 'neutral' };
+export type HistoryStatus = {
+  labelKey: TranslationKey;
+  /** Present when the label needs a day count. */
+  count: number | null;
+  tone: 'primary' | 'danger' | 'neutral';
+};
 
 export function historyStatus(expiresAt: number | null, now: number): HistoryStatus {
-  if (expiresAt === null) return { label: 'Đã giữ lại', tone: 'neutral' };
-  if (isExpiringSoon(expiresAt, now)) return { label: 'Sắp hết hạn', tone: 'danger' };
-  return { label: `còn ${daysLeft(expiresAt, now)} ngày`, tone: 'primary' };
+  if (expiresAt === null) return { labelKey: 'status.kept', count: null, tone: 'neutral' };
+  if (isExpiringSoon(expiresAt, now))
+    return { labelKey: 'status.expiring', count: null, tone: 'danger' };
+  return { labelKey: 'status.daysLeft', count: daysLeft(expiresAt, now), tone: 'primary' };
 }

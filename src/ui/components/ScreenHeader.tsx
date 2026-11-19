@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useI18n } from '../../i18n';
 import { spacing } from '../theme';
 import { useTheme } from '../useTheme';
 import { IconButton } from './Button';
@@ -17,6 +18,7 @@ export function useScreenHeaderHeight(): number {
 export function ScreenHeader({ title }: { title: string }) {
   const router = useRouter();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
 
   function goBack() {
@@ -27,7 +29,7 @@ export function ScreenHeader({ title }: { title: string }) {
   return (
     <View style={{ paddingTop: insets.top, backgroundColor: colors.background }}>
       <View style={styles.row}>
-        <IconButton icon="arrow-back" accessibilityLabel="Quay lại" onPress={goBack} />
+        <IconButton icon="arrow-back" accessibilityLabel={t('common.back')} onPress={goBack} />
         <Text variant="heading" numberOfLines={1} style={styles.title}>
           {title}
         </Text>

@@ -1,6 +1,7 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
+import { useI18n } from '../i18n';
 import { getParkingService } from '../container';
 import { pickCurrent } from '../domain/current';
 import type { ParkingRecord } from '../domain/types';
@@ -15,6 +16,7 @@ export function useParking() {
   // Reading Date.now() in a compiled component body gets cached by React Compiler,
   // so the clock lives in state and is refreshed together with the data.
   const [now, setNow] = useState(() => Date.now());
+  const { locale } = useI18n();
 
   const latestRequest = useRef(0);
 
@@ -45,11 +47,11 @@ export function useParking() {
       console.warn('Failed to sync the geofence', error);
     }
     try {
-      await syncReminders(list, Date.now());
+      await syncReminders(list, Date.now(), locale);
     } catch (error) {
       console.warn('Failed to sync reminders', error);
     }
-  }, []);
+  }, [locale]);
 
   useFocusEffect(
     useCallback(() => {

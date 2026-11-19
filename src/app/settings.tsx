@@ -5,9 +5,11 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, Switch, View } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService } from '../container';
 import { pickCurrent } from '../domain/current';
-import { RETENTION_OPTIONS, type RetentionDays } from '../domain/settings';
+import { RETENTION_OPTIONS, type Language, type RetentionDays } from '../domain/settings';
 import { useParking } from '../hooks/useParking';
 import { useSettings } from '../hooks/useSettings';
+import { useI18n } from '../i18n';
+import type { TranslationKey } from '../i18n/translations';
 import { requestBackgroundLocation, syncGeofence } from '../native/geofence';
 import { ensureNotificationPermission, syncReminders } from '../native/reminders';
 import { TextButton } from '../ui/components/Button';
@@ -16,18 +18,22 @@ import { Text } from '../ui/components/Text';
 import { radius, spacing } from '../ui/theme';
 import { useTheme } from '../ui/useTheme';
 
-const RETENTION_CHOICES: { value: string; label: string }[] = RETENTION_OPTIONS.map((days) => ({
-  value: String(days),
-  label: days === 30 ? '1 tháng' : days === 60 ? '2 tháng' : `${days} ngày`,
-}));
+const RETENTION_LABEL_KEYS: Record<RetentionDays, TranslationKey> = {
+  7: 'settings.retention.7',
+  30: 'settings.retention.30',
+  60: 'settings.retention.60',
+};
 
-function retentionLabel(days: RetentionDays): string {
-  return `Ảnh được giữ ${days} ngày kể từ lúc chụp, sau đó tự xoá khỏi máy.`;
-}
+const LANGUAGE_KEYS: Record<Language, TranslationKey> = {
+  system: 'settings.language.system',
+  vi: 'settings.language.vi',
+  en: 'settings.language.en',
+};
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { t, language, locale, setLanguage } = useI18n();
   const insets = useSafeAreaInsets();
   const { settings, update } = useSettings();
   const { records, refresh } = useParking();
@@ -52,17 +58,14 @@ export default function SettingsScreen() {
     if (next) {
       const granted = await ensureNotificationPermission();
       if (!granted) {
-        Alert.alert(
-          'Chưa bật thông báo',
-          'Hãy cho phép thông báo trong Cài đặt của máy để app nhắc bạn trước khi ảnh bị xoá.',
-        );
+        Alert.alert(t('settings.reminders.deniedTitle'), t('settings.reminders.deniedBody'));
         return;
       }
     }
     const updated = await update({ remindersEnabled: next });
     const service = await getParkingService();
     const list = await service.list();
-    if (updated.remindersEnabled) await syncReminders(list, Date.now());
+    if (updated.remindersEnabled) await syncReminders(list, Date.now(), locale);
     else await Notifications.cancelAllScheduledNotificationsAsync();
   }
 
@@ -70,10 +73,7 @@ export default function SettingsScreen() {
     if (next) {
       const granted = await requestBackgroundLocation();
       if (!granted) {
-        Alert.alert(
-          'Cần quyền vị trí',
-          'Để nhắc khi rời bãi đỗ, app cần quyền vị trí "Luôn cho phép". Bạn có thể bật lại trong Cài đặt của máy.',
-        );
+        Alert.alert(t('settings.geofence.deniedTitle'), t('settings.geofence.deniedBody'));
         return;
       }
     }
@@ -82,33 +82,32 @@ export default function SettingsScreen() {
   }
 
   function confirmDeleteAll() {
-    Alert.alert(
-      'Xoá toàn bộ dữ liệu?',
-      'Tất cả ảnh và vị trí đã lưu trên máy này sẽ bị xoá. Không thể hoàn tác.',
-      [
-        { text: 'Huỷ', style: 'cancel' },
-        {
-          text: 'Xoá tất cả',
-          style: 'destructive',
-          onPress: async () => {
-            setBusy(true);
-            try {
-              const service = await getParkingService();
-              const removed = await service.deleteAll();
-              await Notifications.cancelAllScheduledNotificationsAsync();
-              await syncGeofence(null, false);
-              await refresh();
-              Alert.alert('Đã xoá', `${removed} vị trí đã được xoá khỏi máy.`);
-              router.back();
-            } catch {
-              Alert.alert('Không xoá được', 'Vui lòng thử lại.');
-            } finally {
-              setBusy(false);
-            }
-          },
+    Alert.alert(t('settings.data.confirmTitle'), t('settings.data.confirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('settings.data.confirm'),
+        style: 'destructive',
+        onPress: async () => {
+          setBusy(true);
+          try {
+            const service = await getParkingService();
+            const removed = await service.deleteAll();
+            await Notifications.cancelAllScheduledNotificationsAsync();
+            await syncGeofence(null, false);
+            await refresh();
+            Alert.alert(
+              t('settings.data.doneTitle'),
+              t('settings.data.doneBody', { count: removed }),
+            );
+            router.back();
+          } catch {
+            Alert.alert(t('settings.data.errorTitle'), t('common.errorBody'));
+          } finally {
+            setBusy(false);
+          }
         },
-      ],
-    );
+      },
+    ]);
   }
 
   return (
@@ -117,24 +116,42 @@ export default function SettingsScreen() {
       contentContainerStyle={[styles.content, { paddingBottom: spacing.xl + insets.bottom }]}
     >
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Text variant="heading">Thời hạn giữ ảnh</Text>
+        <Text variant="heading">{t('settings.retention.title')}</Text>
         <Text variant="caption" muted>
-          {retentionLabel(settings.retentionDays)}
+          {t('settings.retention.body', { days: settings.retentionDays })}
         </Text>
         <SegmentedTabs
-          options={RETENTION_CHOICES}
+          options={RETENTION_OPTIONS.map((days) => ({
+            value: String(days),
+            label: t(RETENTION_LABEL_KEYS[days]),
+          }))}
           value={String(settings.retentionDays)}
           onChange={changeRetention}
         />
       </View>
 
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Text variant="heading">Nhắc nhở</Text>
+        <Text variant="heading">{t('settings.language.title')}</Text>
+        <Text variant="caption" muted>
+          {t('settings.language.body')}
+        </Text>
+        <SegmentedTabs
+          options={(Object.keys(LANGUAGE_KEYS) as Language[]).map((value) => ({
+            value,
+            label: t(LANGUAGE_KEYS[value]),
+          }))}
+          value={language}
+          onChange={(value) => setLanguage(value as Language)}
+        />
+      </View>
+
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Text variant="heading">{t('settings.reminders.title')}</Text>
         <View style={styles.row}>
           <View style={styles.rowText}>
-            <Text>Nhắc trước khi ảnh bị xoá</Text>
+            <Text>{t('settings.reminders.expiry')}</Text>
             <Text variant="caption" muted>
-              Thông báo vào ngày trước hạn tự xoá.
+              {t('settings.reminders.expiryBody')}
             </Text>
           </View>
           <Switch
@@ -142,14 +159,14 @@ export default function SettingsScreen() {
             onValueChange={toggleReminders}
             trackColor={{ true: colors.primary, false: colors.border }}
             thumbColor={colors.surface}
-            accessibilityLabel="Nhắc trước khi ảnh bị xoá"
+            accessibilityLabel={t('settings.reminders.expiry')}
           />
         </View>
         <View style={styles.row}>
           <View style={styles.rowText}>
-            <Text>Nhắc khi rời bãi đỗ</Text>
+            <Text>{t('settings.reminders.geofence')}</Text>
             <Text variant="caption" muted>
-              Dùng vị trí nền, báo khi bạn rời chỗ đậu khoảng 400 m.
+              {t('settings.reminders.geofenceBody')}
             </Text>
           </View>
           <Switch
@@ -157,18 +174,18 @@ export default function SettingsScreen() {
             onValueChange={toggleGeofence}
             trackColor={{ true: colors.primary, false: colors.border }}
             thumbColor={colors.surface}
-            accessibilityLabel="Nhắc khi rời bãi đỗ"
+            accessibilityLabel={t('settings.reminders.geofence')}
           />
         </View>
       </View>
 
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Text variant="heading">Dữ liệu</Text>
+        <Text variant="heading">{t('settings.data.title')}</Text>
         <Text variant="caption" muted>
-          Không tài khoản, không cloud, không analytics. Mọi thứ chỉ nằm trên máy này.
+          {t('settings.data.body')}
         </Text>
         <TextButton
-          title={busy ? 'Đang xoá…' : 'Xoá toàn bộ dữ liệu'}
+          title={busy ? t('settings.data.deleting') : t('settings.data.deleteAll')}
           tone="danger"
           onPress={confirmDeleteAll}
           disabled={busy}

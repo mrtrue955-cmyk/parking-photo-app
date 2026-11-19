@@ -1,5 +1,5 @@
 const LEVEL_TOKEN = /\bB[123]\b/i;
-const PILLAR_TOKEN = /\bcột\s*\d{1,3}\b/i;
+const PILLAR_TOKEN = /\b(?:cột|pillar)\s*\d{1,3}\b/i;
 const PILLAR_NUMBER = /\d{1,3}/;
 
 export type NoteParts = { level: string | null; pillar: number | null };
@@ -27,9 +27,9 @@ export function setLevel(note: string, level: string): string {
   return trimmed === '' ? level : `${level} · ${trimmed}`;
 }
 
-export function setPillar(note: string, pillar: number): string {
+export function setPillar(note: string, pillar: number, word = 'cột'): string {
   const value = Math.max(1, Math.min(999, Math.round(pillar)));
-  if (PILLAR_TOKEN.test(note)) return note.replace(PILLAR_TOKEN, `cột ${value}`);
+  if (PILLAR_TOKEN.test(note)) return note.replace(PILLAR_TOKEN, `${word} ${value}`);
   const trimmed = note.trim();
-  return trimmed === '' ? `cột ${value}` : `${trimmed} · cột ${value}`;
+  return trimmed === '' ? `${word} ${value}` : `${trimmed} · ${word} ${value}`;
 }

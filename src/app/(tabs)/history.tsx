@@ -7,6 +7,8 @@ import { historyOf } from '../../domain/current';
 import { filterHistory, type HistoryFilter } from '../../domain/history';
 import { groupHistoryByDay } from '../../domain/historyGroups';
 import { useParking } from '../../hooks/useParking';
+import { useI18n } from '../../i18n';
+import type { TranslationKey } from '../../i18n/translations';
 import { EmptyState } from '../../ui/components/EmptyState';
 import { HistoryCard } from '../../ui/components/HistoryCard';
 import { SegmentedTabs } from '../../ui/components/SegmentedTabs';
@@ -15,21 +17,22 @@ import { Text } from '../../ui/components/Text';
 import { spacing } from '../../ui/theme';
 import { useTheme } from '../../ui/useTheme';
 
-const OPTIONS: { value: HistoryFilter; label: string }[] = [
-  { value: 'all', label: 'Tất cả' },
-  { value: 'expiring', label: 'Sắp hết hạn' },
-  { value: 'kept', label: 'Đã giữ lại' },
+const FILTERS: { value: HistoryFilter; labelKey: TranslationKey }[] = [
+  { value: 'all', labelKey: 'history.filter.all' },
+  { value: 'expiring', labelKey: 'history.filter.expiring' },
+  { value: 'kept', labelKey: 'history.filter.kept' },
 ];
 
-const EMPTY_TEXT: Record<HistoryFilter, string> = {
-  all: 'Chưa có ảnh nào trong lịch sử.',
-  expiring: 'Chưa có ảnh nào sắp hết hạn.',
-  kept: 'Chưa có ảnh nào được giữ lại.',
+const EMPTY_KEYS: Record<HistoryFilter, TranslationKey> = {
+  all: 'history.empty.all',
+  expiring: 'history.empty.expiring',
+  kept: 'history.empty.kept',
 };
 
 export default function History() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { t, locale } = useI18n();
   const insets = useSafeAreaInsets();
   const bottomSpace = useTabBarSpace();
   const { records, loaded, now } = useParking();
@@ -39,7 +42,7 @@ export default function History() {
   if (!loaded) return <View style={[styles.fill, { backgroundColor: colors.background }]} />;
 
   const visible = filterHistory(historyOf(records), filter, now);
-  const sections = groupHistoryByDay(visible, now);
+  const sections = groupHistoryByDay(visible, now, locale);
 
   return (
     <SectionList
@@ -52,11 +55,15 @@ export default function History() {
       ]}
       ListHeaderComponent={
         <View style={styles.header}>
-          <Text variant="title">Lịch sử</Text>
-          <SegmentedTabs options={OPTIONS} value={filter} onChange={setFilter} />
+          <Text variant="title">{t('history.title')}</Text>
+          <SegmentedTabs
+            options={FILTERS.map((item) => ({ value: item.value, label: t(item.labelKey) }))}
+            value={filter}
+            onChange={setFilter}
+          />
         </View>
       }
-      ListEmptyComponent={<EmptyState icon="time-outline" text={EMPTY_TEXT[filter]} />}
+      ListEmptyComponent={<EmptyState icon="time-outline" text={t(EMPTY_KEYS[filter])} />}
       stickySectionHeadersEnabled
       renderSectionHeader={({ section }) => (
         <Text

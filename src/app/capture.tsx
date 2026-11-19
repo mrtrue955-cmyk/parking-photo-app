@@ -26,6 +26,8 @@ import { suggestNoteFromPhoto } from '../native/photoSuggestion';
 import { ensureNotificationPermission } from '../native/reminders';
 import { PrimaryButton, SecondaryButton } from '../ui/components/Button';
 import { impactFeedback, successFeedback, tapFeedback } from '../ui/haptics';
+import { useI18n } from '../i18n';
+import type { TranslationKey } from '../i18n/translations';
 import { useScreenHeaderHeight } from '../ui/components/ScreenHeader';
 import { Text } from '../ui/components/Text';
 import { fontFamilies, radius, spacing } from '../ui/theme';
@@ -36,15 +38,16 @@ type SuggestionStatus = 'idle' | 'reading' | 'suggested';
 
 const LEVELS = ['B1', 'B2', 'B3'] as const;
 
-const STATUS_LABEL: Record<SuggestionStatus, string | null> = {
+const STATUS_LABEL: Record<SuggestionStatus, TranslationKey | null> = {
   idle: null,
-  reading: 'Đang đọc ảnh…',
-  suggested: 'Gợi ý từ ảnh',
+  reading: 'capture.review.reading',
+  suggested: 'capture.review.suggested',
 };
 
 export default function CaptureScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { t, locale } = useI18n();
   const headerHeight = useScreenHeaderHeight();
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
@@ -71,20 +74,22 @@ export default function CaptureScreen() {
           <Ionicons name="camera" size={30} color={colors.onChip} />
         </View>
         <Text variant="heading" style={styles.message}>
-          Cần quyền camera
+          {t('capture.permission.title')}
         </Text>
         <Text muted style={styles.message}>
-          App dùng camera để chụp cột xe và đọc số cột. Ảnh chỉ nằm trên máy này, không tải lên
-          mạng.
+          {t('capture.permission.body')}
         </Text>
         {permission.canAskAgain ? (
-          <PrimaryButton title="Tiếp tục" onPress={requestPermission} />
+          <PrimaryButton title={t('capture.permission.continue')} onPress={requestPermission} />
         ) : (
           <>
             <Text variant="caption" muted style={styles.message}>
-              Quyền camera đang bị tắt trong Cài đặt của máy.
+              {t('capture.permission.disabled')}
             </Text>
-            <PrimaryButton title="Mở Cài đặt" onPress={() => Linking.openSettings()} />
+            <PrimaryButton
+              title={t('capture.permission.openSettings')}
+              onPress={() => Linking.openSettings()}
+            />
           </>
         )}
       </View>
@@ -96,7 +101,7 @@ export default function CaptureScreen() {
     if (noteEdited.current) return;
     const requestId = ++suggestionRequest.current;
     setSuggestionStatus('reading');
-    suggestNoteFromPhoto(uri).then((suggestion) => {
+    suggestNoteFromPhoto(uri, locale).then((suggestion) => {
       // Ignore results for an older photo or after a retake/save.
       if (requestId !== suggestionRequest.current) return;
       if (suggestion && !noteEdited.current) {
@@ -134,7 +139,7 @@ export default function CaptureScreen() {
       suggestForPhoto(photo.uri);
       setCoords(await coordsPromise);
     } catch {
-      Alert.alert('Không chụp được ảnh', 'Vui lòng thử lại.');
+      Alert.alert(t('capture.takeErrorTitle'), t('capture.takeErrorBody'));
     } finally {
       setBusy(false);
     }
@@ -145,11 +150,11 @@ export default function CaptureScreen() {
     if (status !== 'undetermined') return;
     await new Promise<void>((resolve) => {
       Alert.alert(
-        'Nhắc trước khi xoá',
-        'Cho phép thông báo để app nhắc bạn trước khi ảnh bị xoá.',
+        t('capture.notifTitle'),
+        t('capture.notifBody'),
         [
           {
-            text: 'Tiếp tục',
+            text: t('capture.notifContinue'),
             onPress: () => {
               ensureNotificationPermission()
                 .catch(() => undefined)
@@ -180,12 +185,12 @@ export default function CaptureScreen() {
         });
         saved = true;
       } catch {
-        Alert.alert('Không lưu được ảnh', 'Vui lòng thử lại.');
+        Alert.alert(t('capture.saveErrorTitle'), t('capture.saveErrorBody'));
       }
       if (saved) {
         successFeedback();
         await askNotificationOnce().catch(() => undefined);
-        if (savedRecord) await showParkedNotification(savedRecord);
+        if (savedRecord) await showParkedNotification(savedRecord, { locale });
         router.back();
       }
     } finally {
@@ -209,7 +214,7 @@ export default function CaptureScreen() {
     const current = parseNote(note).pillar;
     const next = current === null ? (delta > 0 ? 1 : 1) : current + delta;
     setSuggestionStatus('idle');
-    editNote(setPillar(note, next));
+    editNote(setPillar(note, next, t('capture.pillarWord')));
   }
 
   if (photoUri) {
@@ -234,17 +239,17 @@ export default function CaptureScreen() {
               style={styles.preview}
               contentFit="cover"
               accessible
-              accessibilityLabel="Ảnh vừa chụp"
+              accessibilityLabel={t('capture.photoA11y')}
             />
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Chụp lại ảnh khác"
+              accessibilityLabel={t('capture.retake')}
               onPress={retake}
               style={styles.retakeChip}
             >
               <Ionicons name="refresh" size={13} color="#FFFFFF" />
               <Text variant="caption" style={styles.retakeText}>
-                Chụp lại
+                {t('capture.retake')}
               </Text>
             </Pressable>
           </View>
@@ -253,7 +258,7 @@ export default function CaptureScreen() {
             style={[styles.panel, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
             <View style={styles.panelHead}>
-              <Text variant="heading">Kiểm tra vị trí</Text>
+              <Text variant="heading">{t('capture.review.title')}</Text>
               {statusLabel ? (
                 <View style={[styles.statusPill, { backgroundColor: colors.surfaceAlt }]}>
                   {suggestionStatus === 'reading' ? (
@@ -275,7 +280,7 @@ export default function CaptureScreen() {
                 color={coords ? colors.accent : colors.textMuted}
               />
               <Text variant="caption" muted>
-                {coords ? 'Đã lấy vị trí GPS' : 'Không lấy được GPS, sẽ không có dẫn đường'}
+                {coords ? t('capture.gps.ok') : t('capture.gps.missing')}
               </Text>
             </View>
 
@@ -289,7 +294,7 @@ export default function CaptureScreen() {
                         key={level}
                         accessibilityRole="button"
                         accessibilityState={{ selected: active }}
-                        accessibilityLabel={`Tầng ${level}`}
+                        accessibilityLabel={t('capture.levelA11y', { level })}
                         onPress={() => chooseLevel(level)}
                         style={[
                           styles.levelChip,
@@ -311,18 +316,20 @@ export default function CaptureScreen() {
                   <View style={styles.stepper}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Giảm số cột"
+                      accessibilityLabel={t('capture.pillarDecrease')}
                       onPress={() => stepPillar(-1)}
                       style={[styles.stepBtn, { borderColor: colors.border }]}
                     >
                       <Ionicons name="remove" size={16} color={colors.text} />
                     </Pressable>
                     <Text variant="button" style={styles.stepValue}>
-                      {parts.pillar === null ? 'Số cột' : `Cột ${parts.pillar}`}
+                      {parts.pillar === null
+                        ? t('capture.pillarNone')
+                        : t('capture.pillarValue', { count: parts.pillar })}
                     </Text>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Tăng số cột"
+                      accessibilityLabel={t('capture.pillarIncrease')}
                       onPress={() => stepPillar(1)}
                       style={[styles.stepBtn, { borderColor: colors.border }]}
                     >
@@ -342,11 +349,11 @@ export default function CaptureScreen() {
                   color: colors.text,
                 },
               ]}
-              placeholder="Ghi chú (ví dụ: B2, cột 14)"
+              placeholder={t('capture.notePlaceholder')}
               placeholderTextColor={colors.textMuted}
               cursorColor={colors.accent}
               selectionColor={colors.primary}
-              accessibilityLabel="Ghi chú vị trí xe"
+              accessibilityLabel={t('capture.noteA11y')}
               value={note}
               onChangeText={(text) => {
                 setSuggestionStatus('idle');
@@ -357,11 +364,11 @@ export default function CaptureScreen() {
           </View>
 
           <PrimaryButton
-            title={busy ? 'Đang lưu...' : 'Lưu vị trí'}
+            title={busy ? t('capture.saving') : t('capture.save')}
             onPress={save}
             disabled={busy}
           />
-          <SecondaryButton title="Chụp ảnh khác" onPress={retake} disabled={busy} />
+          <SecondaryButton title={t('capture.retakeAction')} onPress={retake} disabled={busy} />
         </ScrollView>
       </KeyboardAvoidingView>
     );
@@ -379,14 +386,14 @@ export default function CaptureScreen() {
         </View>
         <View style={styles.cameraHint} pointerEvents="none">
           <Text variant="caption" style={styles.cameraHintText}>
-            Đưa số cột vào khung
+            {t('capture.hint')}
           </Text>
         </View>
       </View>
       <View style={[styles.shutterRow, { paddingBottom: spacing.sm + insets.bottom }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Chụp"
+          accessibilityLabel={t('capture.shutterA11y')}
           accessibilityState={{ disabled: busy }}
           disabled={busy}
           onPress={takePhoto}
@@ -397,7 +404,7 @@ export default function CaptureScreen() {
           </View>
         </Pressable>
         <Text variant="caption" muted>
-          Chạm để chụp
+          {t('capture.shutterHint')}
         </Text>
       </View>
     </View>

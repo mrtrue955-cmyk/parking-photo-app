@@ -1,14 +1,22 @@
+import { translate } from '../i18n/translate';
+import type { Locale } from '../i18n/translations';
+
 export const PARKED_NOTIFICATION_ID = 'parked-spot';
 export const PARKED_CATEGORY_WITH_GPS = 'parked-with-gps';
 export const PARKED_CATEGORY_NO_GPS = 'parked-no-gps';
 export const PARKED_ACTION_COLLECT = 'collect';
 export const PARKED_ACTION_NAVIGATE = 'navigate';
 
-export function buildParkedText(note: string): { title: string; body: string } {
+export function buildParkedText(
+  note: string,
+  locale: Locale = 'vi',
+): { title: string; body: string } {
   const trimmed = note.trim();
   return {
-    title: 'Vị trí xe của bạn',
-    body: trimmed ? `Xe bạn đang đậu ở ${trimmed}` : 'Bạn đã đậu xe',
+    title: translate(locale, 'notif.parked.title'),
+    body: trimmed
+      ? translate(locale, 'notif.parked.bodyWithNote', { note: trimmed })
+      : translate(locale, 'notif.parked.bodyNoNote'),
   };
 }
 

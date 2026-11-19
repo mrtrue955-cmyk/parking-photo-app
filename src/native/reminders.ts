@@ -1,5 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { buildReminders } from '../domain/expiry';
+import { translate } from '../i18n/translate';
+import type { Locale } from '../i18n/translations';
 import type { ParkingRecord } from '../domain/types';
 
 export async function ensureNotificationPermission(): Promise<boolean> {
@@ -13,13 +15,17 @@ export async function ensureNotificationPermission(): Promise<boolean> {
 // background task) never interleave cancel-all/schedule and duplicate reminders.
 let syncChain: Promise<void> = Promise.resolve();
 
-export function syncReminders(records: ParkingRecord[], now: number): Promise<void> {
-  const run = syncChain.then(() => runSync(records, now));
+export function syncReminders(
+  records: ParkingRecord[],
+  now: number,
+  locale: Locale = 'vi',
+): Promise<void> {
+  const run = syncChain.then(() => runSync(records, now, locale));
   syncChain = run.catch(() => undefined);
   return run;
 }
 
-async function runSync(records: ParkingRecord[], now: number): Promise<void> {
+async function runSync(records: ParkingRecord[], now: number, locale: Locale): Promise<void> {
   const permission = await Notifications.getPermissionsAsync();
   if (!permission.granted) return;
   await Notifications.cancelAllScheduledNotificationsAsync();
@@ -27,8 +33,8 @@ async function runSync(records: ParkingRecord[], now: number): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       identifier: reminder.id,
       content: {
-        title: 'Ảnh vị trí xe sắp bị xoá',
-        body: `${reminder.count} ảnh sẽ bị xoá vào ngày mai. Mở app để giữ lại.`,
+        title: translate(locale, 'notif.reminder.title'),
+        body: translate(locale, 'notif.reminder.body', { count: reminder.count }),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,

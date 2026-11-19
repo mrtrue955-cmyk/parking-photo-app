@@ -1,20 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useI18n } from '../../i18n';
 import { radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
 import { Text } from './Text';
 
 type Props = { onPress: () => void };
 
-/** The single call to action on the empty home screen. The tab bar FAB stays secondary-free. */
+/** The single call to action on the empty home screen. */
 export function CaptureCta({ onPress }: Props) {
   const { colors } = useTheme();
+  const { t } = useI18n();
   return (
     <Animated.View entering={FadeInDown.delay(60).duration(220)}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Chụp vị trí xe"
+        accessibilityLabel={t('home.cta.title')}
         onPress={onPress}
         style={({ pressed }) => [
           styles.card,
@@ -29,9 +31,9 @@ export function CaptureCta({ onPress }: Props) {
           <Ionicons name="camera" size={22} color={colors.onChip} />
         </View>
         <View style={styles.body}>
-          <Text variant="button">Chụp vị trí xe</Text>
+          <Text variant="button">{t('home.cta.title')}</Text>
           <Text variant="caption" muted style={styles.subtitle}>
-            AI đọc tầng và số cột từ ảnh
+            {t('home.cta.subtitle')}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />

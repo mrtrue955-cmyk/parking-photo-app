@@ -65,7 +65,19 @@ test('historyStatus describes kept, expiring and normal records', () => {
   // Given a kept record, one with 3 days left, one with 21 days left
   // When computing their status
   // Then kept is neutral, under 4 days is a danger "Sắp hết hạn", and the rest shows the day count
-  expect(historyStatus(null, now)).toEqual({ label: 'Đã giữ lại', tone: 'neutral' });
-  expect(historyStatus(now + 3 * DAY_MS, now)).toEqual({ label: 'Sắp hết hạn', tone: 'danger' });
-  expect(historyStatus(now + 21 * DAY_MS, now)).toEqual({ label: 'còn 21 ngày', tone: 'primary' });
+  expect(historyStatus(null, now)).toEqual({
+    labelKey: 'status.kept',
+    count: null,
+    tone: 'neutral',
+  });
+  expect(historyStatus(now + 3 * DAY_MS, now)).toEqual({
+    labelKey: 'status.expiring',
+    count: null,
+    tone: 'danger',
+  });
+  expect(historyStatus(now + 21 * DAY_MS, now)).toEqual({
+    labelKey: 'status.daysLeft',
+    count: 21,
+    tone: 'primary',
+  });
 });

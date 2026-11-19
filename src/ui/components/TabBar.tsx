@@ -3,6 +3,8 @@ import { useRouter, type Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useI18n } from '../../i18n';
+import type { TranslationKey } from '../../i18n/translations';
 import { fontFamilies, radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
 import { Text } from './Text';
@@ -21,14 +23,15 @@ type TabBarRenderer = NonNullable<ComponentProps<typeof Tabs>['tabBar']>;
 type BottomTabBarProps = Parameters<TabBarRenderer>[0];
 
 const TAB_ITEMS = {
-  index: { label: 'Xe của tôi', icon: 'home', iconOff: 'home-outline' },
-  history: { label: 'Lịch sử', icon: 'time', iconOff: 'time-outline' },
-} as const;
+  index: { labelKey: 'tabs.home', icon: 'home', iconOff: 'home-outline' },
+  history: { labelKey: 'tabs.history', icon: 'time', iconOff: 'time-outline' },
+} as const satisfies Record<string, { labelKey: TranslationKey; icon: string; iconOff: string }>;
 
 type TabName = keyof typeof TAB_ITEMS;
 
 export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const focusedName = state.routes[state.index]?.name;
@@ -37,6 +40,7 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
     const route = state.routes.find((r) => r.name === name);
     if (!route) return null;
     const item = TAB_ITEMS[name];
+    const label = t(item.labelKey);
     const focused = focusedName === name;
 
     function onPress() {
@@ -51,7 +55,7 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
     return (
       <Pressable
         accessibilityRole="tab"
-        accessibilityLabel={item.label}
+        accessibilityLabel={label}
         accessibilityState={{ selected: focused }}
         onPress={onPress}
         style={styles.tab}
@@ -71,7 +75,7 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
             },
           ]}
         >
-          {item.label}
+          {label}
         </Text>
       </Pressable>
     );
@@ -86,7 +90,7 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         {renderTab('index')}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Chụp vị trí xe"
+          accessibilityLabel={t('tabs.capture')}
           onPress={() => router.push('/capture')}
           style={({ pressed }) => [
             styles.fab,

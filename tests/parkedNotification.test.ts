@@ -153,3 +153,14 @@ test('isSilentPost is true only when data.silent is exactly true', () => {
   expect(isSilentPost(null)).toBe(false);
   expect(isSilentPost('junk')).toBe(false);
 });
+
+test('buildParkedText follows the requested locale', () => {
+  expect(buildParkedText('B1', 'en')).toEqual({
+    title: 'Your parking spot',
+    body: 'Your car is parked at B1',
+  });
+  expect(buildParkedText('', 'en')).toEqual({
+    title: 'Your parking spot',
+    body: 'You parked your car',
+  });
+});

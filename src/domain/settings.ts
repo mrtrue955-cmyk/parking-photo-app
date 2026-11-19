@@ -1,7 +1,12 @@
 export const RETENTION_OPTIONS = [7, 30, 60] as const;
 export type RetentionDays = (typeof RETENTION_OPTIONS)[number];
 
+export const LANGUAGES = ['system', 'vi', 'en'] as const;
+export type Language = (typeof LANGUAGES)[number];
+
 export type AppSettings = {
+  /** UI and notification language; "system" follows the device. */
+  language: Language;
   /** How long a photo is kept before it is deleted automatically. */
   retentionDays: RetentionDays;
   /** Whether the app schedules "photo will be deleted tomorrow" reminders. */
@@ -11,6 +16,7 @@ export type AppSettings = {
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
+  language: 'system',
   retentionDays: 30,
   remindersEnabled: true,
   geofenceEnabled: false,
@@ -24,6 +30,9 @@ export function isRetentionDays(value: unknown): value is RetentionDays {
 export function parseSettings(raw: unknown): AppSettings {
   const value = (raw ?? {}) as Partial<Record<keyof AppSettings, unknown>>;
   return {
+    language: LANGUAGES.includes(value.language as Language)
+      ? (value.language as Language)
+      : DEFAULT_SETTINGS.language,
     retentionDays: isRetentionDays(value.retentionDays)
       ? value.retentionDays
       : DEFAULT_SETTINGS.retentionDays,

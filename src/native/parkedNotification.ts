@@ -8,27 +8,30 @@ import {
   PARKED_CATEGORY_WITH_GPS,
   PARKED_NOTIFICATION_ID,
 } from '../domain/parkedNotification';
+import { translate } from '../i18n/translate';
+import type { Locale } from '../i18n/translations';
 import type { ParkingRecord } from '../domain/types';
 
-const COLLECT_BUTTON = {
-  identifier: PARKED_ACTION_COLLECT,
-  buttonTitle: 'Đã lấy xe',
-  options: { opensAppToForeground: true },
-};
+function buttons(locale: Locale) {
+  return {
+    collect: {
+      identifier: PARKED_ACTION_COLLECT,
+      buttonTitle: translate(locale, 'notif.action.collect'),
+      options: { opensAppToForeground: true },
+    },
+    navigate: {
+      identifier: PARKED_ACTION_NAVIGATE,
+      buttonTitle: translate(locale, 'notif.action.navigate'),
+      options: { opensAppToForeground: true },
+    },
+  };
+}
 
-const NAVIGATE_BUTTON = {
-  identifier: PARKED_ACTION_NAVIGATE,
-  buttonTitle: 'Dẫn đường về xe',
-  options: { opensAppToForeground: true },
-};
-
-export async function registerParkedCategories(): Promise<void> {
+export async function registerParkedCategories(locale: Locale = 'vi'): Promise<void> {
+  const { collect, navigate } = buttons(locale);
   try {
-    await Notifications.setNotificationCategoryAsync(PARKED_CATEGORY_WITH_GPS, [
-      COLLECT_BUTTON,
-      NAVIGATE_BUTTON,
-    ]);
-    await Notifications.setNotificationCategoryAsync(PARKED_CATEGORY_NO_GPS, [COLLECT_BUTTON]);
+    await Notifications.setNotificationCategoryAsync(PARKED_CATEGORY_WITH_GPS, [collect, navigate]);
+    await Notifications.setNotificationCategoryAsync(PARKED_CATEGORY_NO_GPS, [collect]);
   } catch (error) {
     console.warn('Failed to register parked notification categories', error);
   }
@@ -37,7 +40,7 @@ export async function registerParkedCategories(): Promise<void> {
 /** Posts (or replaces) the single parked-spot notification. Never rejects. */
 export async function showParkedNotification(
   record: ParkingRecord,
-  options?: { silent?: boolean },
+  options?: { silent?: boolean; locale?: Locale },
 ): Promise<void> {
   try {
     const permission = await Notifications.getPermissionsAsync();
@@ -46,7 +49,7 @@ export async function showParkedNotification(
       await dismissParkedNotification();
       return;
     }
-    const { title, body } = buildParkedText(record.note);
+    const { title, body } = buildParkedText(record.note, options?.locale ?? 'vi');
     await Notifications.scheduleNotificationAsync({
       identifier: PARKED_NOTIFICATION_ID,
       content: {

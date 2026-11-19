@@ -1,6 +1,8 @@
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
+import { localeFromSettings } from '../i18n';
+import { translate } from '../i18n/translate';
 import type { ParkingRecord } from '../domain/types';
 
 export const GEOFENCE_TASK = 'parked-spot-geofence';
@@ -14,10 +16,11 @@ TaskManager.defineTask(GEOFENCE_TASK, async ({ data, error }) => {
   if (error) return;
   const event = (data as { eventType?: Location.GeofencingEventType } | undefined)?.eventType;
   if (event !== Location.GeofencingEventType.Exit) return;
+  const locale = await localeFromSettings();
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Bạn đã rời bãi đỗ',
-      body: 'Vị trí xe vẫn được lưu. Mở app để xem ảnh hoặc xoá nếu đã lấy xe.',
+      title: translate(locale, 'notif.geofence.title'),
+      body: translate(locale, 'notif.geofence.body'),
     },
     trigger: null,
   }).catch(() => undefined);

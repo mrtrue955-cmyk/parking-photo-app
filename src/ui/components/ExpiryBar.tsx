@@ -1,22 +1,24 @@
 import { StyleSheet, View } from 'react-native';
 import { daysLeft, expiryFraction, isExpiringSoon } from '../../domain/expiry';
+import { useI18n } from '../../i18n';
 import { useTheme } from '../useTheme';
 import { Text } from './Text';
 
-/** Shows how much of the 30-day retention window is left, or "Đã giữ lại" for kept photos. */
+/** Shows how much of the retention window is left, or the kept label for kept photos. */
 export function ExpiryBar({ expiresAt, now }: { expiresAt: number | null; now: number }) {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   if (expiresAt === null) {
     return (
       <Text variant="caption" muted>
-        Đã giữ lại
+        {t('status.kept')}
       </Text>
     );
   }
 
   const days = daysLeft(expiresAt, now);
-  const label = `còn ${days} ngày`;
+  const label = t('status.daysLeft', { count: days });
   const fill = isExpiringSoon(expiresAt, now) ? colors.danger : colors.primary;
   const percent = Math.round(expiryFraction(expiresAt, now) * 100);
 
@@ -24,7 +26,7 @@ export function ExpiryBar({ expiresAt, now }: { expiresAt: number | null; now: n
     <View
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel="Hạn xoá"
+      accessibilityLabel={t('detail.expiryLabel')}
       accessibilityValue={{ text: label }}
       style={styles.row}
     >

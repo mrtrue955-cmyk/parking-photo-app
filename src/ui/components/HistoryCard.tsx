@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { historyStatus } from '../../domain/history';
 import type { ParkingRecord } from '../../domain/types';
-import { formatTimeAgo } from '../format';
+import { useI18n } from '../../i18n';
 import { radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
 import { ExpiryBar } from './ExpiryBar';
@@ -12,12 +12,15 @@ type Props = { record: ParkingRecord; photoUri: string; now: number; onPress: ()
 
 export function HistoryCard({ record, photoUri, now, onPress }: Props) {
   const { colors } = useTheme();
-  const title = record.note || 'Không có ghi chú';
+  const { t, formatTimeAgo } = useI18n();
+  const title = record.note || t('spot.noNote');
   const status = historyStatus(record.expiresAt, now);
+  const ago = formatTimeAgo(record.createdAt, now);
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title}, ${status.label}, đậu ${formatTimeAgo(record.createdAt, now)}`}
+      accessibilityLabel={`${title}, ${t(status.labelKey, { count: status.count ?? 0 })}, ${ago}`}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
@@ -30,7 +33,7 @@ export function HistoryCard({ record, photoUri, now, onPress }: Props) {
           {title}
         </Text>
         <Text variant="caption" muted>
-          Đậu {formatTimeAgo(record.createdAt, now)}
+          {ago}
         </Text>
         {record.expiresAt !== null ? <ExpiryBar expiresAt={record.expiresAt} now={now} /> : null}
       </View>

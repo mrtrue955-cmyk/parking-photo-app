@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { daysLeft } from '../../domain/expiry';
 import type { ParkingRecord } from '../../domain/types';
-import { formatTimeAgo } from '../format';
+import { useI18n } from '../../i18n';
 import { fontFamilies, radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
 import { PrimaryButton, SecondaryButton } from './Button';
@@ -21,9 +21,10 @@ type Props = {
 
 export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect }: Props) {
   const { colors } = useTheme();
+  const { t, formatTimeAgo } = useI18n();
   const hasGps = record.lat !== null && record.lng !== null;
   const remaining = record.expiresAt !== null ? daysLeft(record.expiresAt, now) : null;
-  const title = record.note || 'Không có ghi chú';
+  const title = record.note || t('spot.noNote');
 
   return (
     <Animated.View
@@ -32,7 +33,7 @@ export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect 
     >
       <Pressable
         accessibilityRole="imagebutton"
-        accessibilityLabel={`${title}, đang đậu. Mở chi tiết vị trí xe`}
+        accessibilityLabel={t('spot.openA11y', { note: title })}
         onPress={onOpen}
       >
         <View>
@@ -43,14 +44,14 @@ export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect 
                 variant="caption"
                 style={{ color: colors.onPrimary, fontFamily: fontFamilies.semibold }}
               >
-                Đang đậu
+                {t('spot.parked')}
               </Text>
             </View>
             {remaining !== null ? (
               <View style={styles.countdown}>
                 <Ionicons name="time-outline" size={12} color="#FFFFFF" />
                 <Text variant="caption" style={styles.countdownText}>
-                  còn {remaining} ngày
+                  {t('spot.daysLeft', { count: remaining })}
                 </Text>
               </View>
             ) : null}
@@ -60,7 +61,7 @@ export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect 
               {title}
             </Text>
             <Text variant="caption" style={styles.time}>
-              Đậu {formatTimeAgo(record.createdAt, now)}
+              {t('spot.parkedFor', { ago: formatTimeAgo(record.createdAt, now) })}
             </Text>
           </View>
         </View>
@@ -71,14 +72,18 @@ export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect 
           <View style={styles.noGps}>
             <Ionicons name="location-outline" size={14} color={colors.textMuted} />
             <Text variant="caption" muted>
-              Không có GPS cho vị trí này
+              {t('spot.noGps')}
             </Text>
           </View>
         )}
         <View style={styles.actions}>
-          <SecondaryButton title="Đã lấy xe" onPress={onCollect} style={styles.secondary} />
+          <SecondaryButton title={t('spot.collect')} onPress={onCollect} style={styles.secondary} />
           {hasGps ? (
-            <PrimaryButton title="Dẫn đường" onPress={onNavigate} style={styles.primary} />
+            <PrimaryButton
+              title={t('spot.directions')}
+              onPress={onNavigate}
+              style={styles.primary}
+            />
           ) : null}
         </View>
       </View>
