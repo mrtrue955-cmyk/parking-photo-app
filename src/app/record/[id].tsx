@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -5,16 +6,17 @@ import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService, getPhotoFiles } from '../../container';
 import { pickCurrent } from '../../domain/current';
-import { useParking } from '../../hooks/useParking';
+import { daysLeft } from '../../domain/expiry';
 import { historyStatus } from '../../domain/history';
+import { useParking } from '../../hooks/useParking';
 import { directionsUrl } from '../../native/directions';
 import { dismissParkedNotification } from '../../native/parkedNotification';
 import { GalleryPermissionDeniedError } from '../../services/ports';
 import { PrimaryButton, SecondaryButton, TextButton } from '../../ui/components/Button';
-import { Chip } from '../../ui/components/Chip';
 import { ExpiryBar } from '../../ui/components/ExpiryBar';
 import { Text } from '../../ui/components/Text';
-import { radius, spacing } from '../../ui/theme';
+import { successFeedback, warningFeedback } from '../../ui/haptics';
+import { fontFamilies, radius, spacing } from '../../ui/theme';
 import { useTheme } from '../../ui/useTheme';
 
 export default function RecordDetail() {
@@ -43,12 +45,17 @@ export default function RecordDetail() {
 
   const recordId = record.id;
   const uri = getPhotoFiles().uriFor(record.photoPath);
+  const isCurrent = pickCurrent(records)?.id === recordId;
+  const status = historyStatus(record.expiresAt, now);
+  const hasGps = record.lat !== null && record.lng !== null;
+  const remaining = record.expiresAt !== null ? daysLeft(record.expiresAt, now) : null;
 
   async function keep() {
     if (busy) return;
     setBusy(true);
     try {
       await (await getParkingService()).keep(recordId);
+      successFeedback();
       await refresh();
       Alert.alert('Đã giữ lại', 'Ảnh đã được lưu vào thư viện và sẽ không bị tự xoá.');
     } catch (error) {
@@ -80,6 +87,7 @@ export default function RecordDetail() {
             setBusy(false);
             return;
           }
+          warningFeedback();
           if (wasCurrent) await dismissParkedNotification();
           setBusy(false);
           router.back();
@@ -88,45 +96,91 @@ export default function RecordDetail() {
     ]);
   }
 
-  const status = historyStatus(record.expiresAt, now);
+  const badge = isCurrent
+    ? { label: 'Đang đậu', backgroundColor: colors.primary, color: colors.onPrimary }
+    : status.tone === 'danger'
+      ? { label: status.label, backgroundColor: colors.dangerChip, color: colors.danger }
+      : status.tone === 'primary'
+        ? { label: status.label, backgroundColor: colors.chip, color: colors.onChip }
+        : { label: status.label, backgroundColor: colors.surfaceAlt, color: colors.text };
 
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={[styles.container, { paddingBottom: spacing.xl + insets.bottom }]}
     >
-      <Image
-        source={{ uri }}
-        style={styles.photo}
-        contentFit="cover"
-        accessible
-        accessibilityLabel="Ảnh vị trí xe"
-      />
-      <Chip label={status.label} tone={status.tone} />
-      {record.note ? (
+      <View style={styles.photoWrap}>
+        <Image
+          source={{ uri }}
+          style={styles.photo}
+          contentFit="cover"
+          accessible
+          accessibilityLabel="Ảnh vị trí xe"
+        />
+        <View style={styles.topRow}>
+          <View style={[styles.badge, { backgroundColor: badge.backgroundColor }]}>
+            <Text
+              variant="caption"
+              style={{ color: badge.color, fontFamily: fontFamilies.semibold }}
+            >
+              {badge.label}
+            </Text>
+          </View>
+          {remaining !== null && !isCurrent ? (
+            <View style={styles.countdown}>
+              <Ionicons name="time-outline" size={12} color="#FFFFFF" />
+              <Text variant="caption" style={styles.countdownText}>
+                còn {remaining} ngày
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+
+      <View style={styles.headBlock}>
         <Text variant="display" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>
-          {record.note}
+          {record.note || 'Không có ghi chú'}
         </Text>
-      ) : (
-        <Text muted>Không có ghi chú</Text>
-      )}
-      <View style={[styles.info, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={styles.metaRow}>
+          <Ionicons name="time-outline" size={13} color={colors.textMuted} />
+          <Text variant="caption" muted>
+            Chụp lúc{' '}
+            {new Date(record.createdAt).toLocaleString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            })}
+          </Text>
+        </View>
+      </View>
+
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Text variant="caption" muted>
-          Chụp lúc {new Date(record.createdAt).toLocaleString('vi-VN')}
+          {record.expiresAt === null ? 'Đã giữ lại trong thư viện ảnh' : 'Hạn tự xoá'}
         </Text>
         <ExpiryBar expiresAt={record.expiresAt} now={now} />
-        {record.lat !== null && record.lng !== null ? (
-          <Text variant="caption" muted>
-            Toạ độ: {record.lat.toFixed(5)}, {record.lng.toFixed(5)}
-          </Text>
-        ) : null}
+        {hasGps ? (
+          <View style={styles.metaRow}>
+            <Ionicons name="location" size={13} color={colors.accent} />
+            <Text variant="caption" muted>
+              {record.lat!.toFixed(5)}, {record.lng!.toFixed(5)}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.metaRow}>
+            <Ionicons name="location-outline" size={13} color={colors.textMuted} />
+            <Text variant="caption" muted>
+              Không có toạ độ cho vị trí này
+            </Text>
+          </View>
+        )}
       </View>
-      {record.expiresAt !== null ? (
-        <PrimaryButton title="Giữ lại" onPress={keep} disabled={busy} />
-      ) : null}
-      {record.lat !== null && record.lng !== null ? (
-        <SecondaryButton
-          title="Mở bản đồ"
+
+      {hasGps ? (
+        <PrimaryButton
+          title="Dẫn đường về xe"
           onPress={() =>
             Linking.openURL(directionsUrl(record.lat!, record.lng!)).catch(() =>
               Alert.alert('Không mở được bản đồ', 'Hãy cài ứng dụng bản đồ rồi thử lại.'),
@@ -134,6 +188,10 @@ export default function RecordDetail() {
           }
         />
       ) : null}
+      {record.expiresAt !== null ? (
+        <SecondaryButton title="Giữ lại" onPress={keep} disabled={busy} />
+      ) : null}
+
       <View style={styles.dangerZone}>
         <TextButton title="Xoá ngay" tone="danger" onPress={confirmDelete} disabled={busy} />
       </View>
@@ -143,13 +201,36 @@ export default function RecordDetail() {
 
 const styles = StyleSheet.create({
   container: { padding: spacing.screen, gap: spacing.md },
-  photo: { width: '100%', height: 300, borderRadius: radius.card },
-  info: {
+  photoWrap: { borderRadius: radius.card, overflow: 'hidden' },
+  photo: { width: '100%', height: 300 },
+  topRow: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill },
+  countdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(20, 16, 14, 0.55)',
+  },
+  countdownText: { color: '#FFFFFF' },
+  headBlock: { gap: 4 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  card: {
     gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  dangerZone: { marginTop: spacing.xl, alignItems: 'center' },
+  dangerZone: { marginTop: spacing.lg, alignItems: 'center' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });

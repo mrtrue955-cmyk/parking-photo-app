@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
 import { Text } from './Text';
@@ -10,30 +11,32 @@ type Props = { onPress: () => void };
 export function CaptureCta({ onPress }: Props) {
   const { colors } = useTheme();
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel="Chụp vị trí xe"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
-          opacity: pressed ? 0.85 : 1,
-        },
-      ]}
-    >
-      <View style={[styles.tile, { backgroundColor: colors.chip }]}>
-        <Ionicons name="camera" size={22} color={colors.onChip} />
-      </View>
-      <View style={styles.body}>
-        <Text variant="button">Chụp vị trí xe</Text>
-        <Text variant="caption" muted style={styles.subtitle}>
-          AI đọc tầng và số cột từ ảnh
-        </Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-    </Pressable>
+    <Animated.View entering={FadeInDown.delay(60).duration(220)}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Chụp vị trí xe"
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.card,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+            opacity: pressed ? 0.85 : 1,
+          },
+        ]}
+      >
+        <View style={[styles.tile, { backgroundColor: colors.chip }]}>
+          <Ionicons name="camera" size={22} color={colors.onChip} />
+        </View>
+        <View style={styles.body}>
+          <Text variant="button">Chụp vị trí xe</Text>
+          <Text variant="caption" muted style={styles.subtitle}>
+            AI đọc tầng và số cột từ ảnh
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </Pressable>
+    </Animated.View>
   );
 }
 

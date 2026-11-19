@@ -24,6 +24,7 @@ import { showParkedNotification } from '../native/parkedNotification';
 import { suggestNoteFromPhoto } from '../native/photoSuggestion';
 import { ensureNotificationPermission } from '../native/reminders';
 import { PrimaryButton, SecondaryButton } from '../ui/components/Button';
+import { impactFeedback, successFeedback, tapFeedback } from '../ui/haptics';
 import { useScreenHeaderHeight } from '../ui/components/ScreenHeader';
 import { Text } from '../ui/components/Text';
 import { fontFamilies, radius, spacing } from '../ui/theme';
@@ -104,6 +105,7 @@ export default function CaptureScreen() {
   }
 
   async function takePhoto() {
+    impactFeedback();
     setBusy(true);
     try {
       const coordsPromise = getCoords();
@@ -162,6 +164,7 @@ export default function CaptureScreen() {
         Alert.alert('Không lưu được ảnh', 'Vui lòng thử lại.');
       }
       if (saved) {
+        successFeedback();
         await askNotificationOnce().catch(() => undefined);
         if (savedRecord) await showParkedNotification(savedRecord);
         router.back();
@@ -177,11 +180,13 @@ export default function CaptureScreen() {
   }
 
   function chooseLevel(level: string) {
+    tapFeedback();
     setSuggestionStatus('idle');
     editNote(setLevel(note, level));
   }
 
   function stepPillar(delta: number) {
+    tapFeedback();
     const current = parseNote(note).pillar;
     const next = current === null ? (delta > 0 ? 1 : 1) : current + delta;
     setSuggestionStatus('idle');

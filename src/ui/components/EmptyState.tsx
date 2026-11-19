@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
 import { PrimaryButton, type IconName } from './Button';
@@ -18,7 +19,8 @@ type Props = {
 export function EmptyState({ icon, text, title, steps, note, actionTitle, onAction }: Props) {
   const { colors } = useTheme();
   return (
-    <View
+    <Animated.View
+      entering={FadeIn.duration(220)}
       style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}
     >
       <View style={[styles.tile, { backgroundColor: colors.surfaceAlt }]}>
@@ -59,7 +61,7 @@ export function EmptyState({ icon, text, title, steps, note, actionTitle, onActi
       {actionTitle && onAction ? (
         <PrimaryButton title={actionTitle} onPress={onAction} style={styles.action} />
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 

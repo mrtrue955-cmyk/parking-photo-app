@@ -13,6 +13,7 @@ import { HistoryCard } from '../../ui/components/HistoryCard';
 import { SpotCard } from '../../ui/components/SpotCard';
 import { useTabBarSpace } from '../../ui/components/TabBar';
 import { Text } from '../../ui/components/Text';
+import { successFeedback } from '../../ui/haptics';
 import { spacing } from '../../ui/theme';
 import { useTheme } from '../../ui/useTheme';
 
@@ -35,6 +36,7 @@ export default function Home() {
   async function collect() {
     try {
       await (await getParkingService()).collectCurrent();
+      successFeedback();
       await dismissParkedNotification();
       await refresh();
     } catch {

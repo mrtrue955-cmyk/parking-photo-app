@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { daysLeft } from '../../domain/expiry';
 import type { ParkingRecord } from '../../domain/types';
 import { formatTimeAgo } from '../format';
@@ -25,7 +26,10 @@ export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect 
   const title = record.note || 'Không có ghi chú';
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <Animated.View
+      entering={FadeInDown.duration(220)}
+      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+    >
       <Pressable
         accessibilityRole="imagebutton"
         accessibilityLabel={`${title}, đang đậu. Mở chi tiết vị trí xe`}
@@ -78,7 +82,7 @@ export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect 
           ) : null}
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
