@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService, getPhotoFiles } from '../../container';
@@ -7,6 +8,7 @@ import { useParking } from '../../hooks/useParking';
 import { useSettings } from '../../hooks/useSettings';
 import { useI18n } from '../../i18n';
 import { directionsUrl } from '../../native/directions';
+import { requestReviewIfDue } from '../../native/review';
 import { IconButton, TextButton } from '../../ui/components/Button';
 import { CaptureCta } from '../../ui/components/CaptureCta';
 import { EmptyState } from '../../ui/components/EmptyState';
@@ -25,11 +27,25 @@ export default function Home() {
   const insets = useSafeAreaInsets();
   const bottomSpace = useTabBarSpace();
   const { records, loaded, now, refresh } = useParking();
-  const { settings } = useSettings();
+  const { settings, update } = useSettings();
   const files = getPhotoFiles();
   const current = pickCurrent(records);
   const recent = historyOf(records).slice(0, 3);
   const retentionDays = settings?.retentionDays ?? 30;
+
+  // The system rating sheet is only offered after the third save, and only once.
+  useEffect(() => {
+    if (!settings) return;
+    let alive = true;
+    requestReviewIfDue(settings.captureCount, settings.reviewAsked)
+      .then((asked) => {
+        if (alive && asked) void update({ reviewAsked: true });
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [settings, update]);
 
   if (!loaded) return <View style={[styles.fill, { backgroundColor: colors.background }]} />;
 

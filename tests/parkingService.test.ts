@@ -272,3 +272,11 @@ test('endSession ignores unknown ids', async () => {
   const { service } = setup();
   await expect(service.endSession('missing')).resolves.toBeUndefined();
 });
+
+test('every capture bumps the save counter used by the rating prompt', async () => {
+  const { service, settings } = setup();
+  expect(settings.current.captureCount).toBe(0);
+  await service.capture({ tempUri: 'file:///tmp/a.jpg', lat: null, lng: null, note: 'B1' });
+  await service.capture({ tempUri: 'file:///tmp/b.jpg', lat: null, lng: null, note: 'B2' });
+  expect(settings.current.captureCount).toBe(2);
+});

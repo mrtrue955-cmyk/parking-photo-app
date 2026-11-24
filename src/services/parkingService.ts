@@ -27,7 +27,8 @@ export function createParkingService({ repo, files, gallery, settings, now, newI
     async capture(input: CaptureInput): Promise<ParkingRecord> {
       const id = newId();
       const createdAt = now();
-      const { retentionDays } = await settings.load();
+      const currentSettings = await settings.load();
+      const { retentionDays } = currentSettings;
       const photoPath = await files.save(input.tempUri, id);
       const record: ParkingRecord = {
         id,
@@ -49,6 +50,9 @@ export function createParkingService({ repo, files, gallery, settings, now, newI
         throw error;
       }
       for (const r of previouslyOpen) await repo.setCollected(r.id, createdAt);
+      // The counter survives photo deletion, so the rating prompt can wait for
+      // the third save even if the earlier spots are gone.
+      await settings.save({ ...currentSettings, captureCount: currentSettings.captureCount + 1 });
       return record;
     },
 

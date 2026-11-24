@@ -203,5 +203,8 @@ Giữ đúng một câu cho mỗi ngôn ngữ; đổi slogan giữa các kênh l
 2. Tạo localization `vi` và `en` trong App Store Connect, dán đúng 3 trường.
 3. Play: dán tên + mô tả ngắn + mô tả đầy đủ, bật "Localize" cho `vi` và `en`.
 4. Ảnh chụp màn hình 6.7" và 6.5" (iPhone-only nên không cần iPad).
-5. Sau khi ra mắt: thêm lời nhắc xin đánh giá sau lần lưu thứ 3 (dùng
-   `expo-store-review`) — đây là đòn bẩy ASO mạnh nhất mà chưa có trong app.
+5. ~~Lời nhắc xin đánh giá sau lần lưu thứ 3~~ — đã làm (`expo-store-review`,
+   bộ đếm `captureCount` trong settings, chỉ hỏi một lần).
+6. ~~Tên hiển thị tiếng Anh trên Home Screen~~ — đã làm bằng `expo.locales`
+   (`en` → ParkPic, `vi` → Cột Xe), kèm bản dịch Purpose String cho quyền camera,
+   vị trí và thư viện ảnh.

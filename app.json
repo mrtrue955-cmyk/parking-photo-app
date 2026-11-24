@@ -39,6 +39,22 @@
     "web": {
       "favicon": "./assets/images/favicon.png"
     },
+    "locales": {
+      "en": {
+        "CFBundleDisplayName": "ParkPic",
+        "NSCameraUsageDescription": "Allow ParkPic to photograph where you parked.",
+        "NSLocationWhenInUseUsageDescription": "Allow ParkPic to save your parking spot so you can walk back to it.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow ParkPic to remind you when you leave the parking area.",
+        "NSPhotoLibraryAddUsageDescription": "Allow ParkPic to save the photos you choose to keep to your library."
+      },
+      "vi": {
+        "CFBundleDisplayName": "Cột Xe",
+        "NSCameraUsageDescription": "Cho phép app chụp ảnh vị trí xe của bạn.",
+        "NSLocationWhenInUseUsageDescription": "Cho phép app lưu vị trí xe để dẫn đường về.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Cho phép app nhắc bạn khi rời bãi đỗ.",
+        "NSPhotoLibraryAddUsageDescription": "Cho phép app lưu ảnh bạn chọn giữ lại vào thư viện."
+      }
+    },
     "plugins": [
       "./plugins/withPolicyManifest",
       "expo-router",

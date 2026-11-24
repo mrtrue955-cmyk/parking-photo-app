@@ -21,6 +21,10 @@ export type AppSettings = {
   quickSave: boolean;
   /** Whether the three-step intro has been seen. */
   onboarded: boolean;
+  /** How many spots have been saved, used to time the rating prompt. */
+  captureCount: number;
+  /** Whether the rating prompt has already been shown. */
+  reviewAsked: boolean;
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -31,6 +35,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   geofenceEnabled: false,
   quickSave: false,
   onboarded: false,
+  captureCount: 0,
+  reviewAsked: false,
 };
 
 export function isRetentionDays(value: unknown): value is RetentionDays {
@@ -60,5 +66,11 @@ export function parseSettings(raw: unknown): AppSettings {
         : DEFAULT_SETTINGS.geofenceEnabled,
     quickSave: typeof value.quickSave === 'boolean' ? value.quickSave : DEFAULT_SETTINGS.quickSave,
     onboarded: typeof value.onboarded === 'boolean' ? value.onboarded : DEFAULT_SETTINGS.onboarded,
+    captureCount:
+      typeof value.captureCount === 'number' && Number.isFinite(value.captureCount)
+        ? Math.max(0, Math.floor(value.captureCount))
+        : DEFAULT_SETTINGS.captureCount,
+    reviewAsked:
+      typeof value.reviewAsked === 'boolean' ? value.reviewAsked : DEFAULT_SETTINGS.reviewAsked,
   };
 }
