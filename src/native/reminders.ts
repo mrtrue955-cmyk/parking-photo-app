@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { buildReminders } from '../domain/expiry';
+import { buildSessionReminders, SESSION_WARN_LEAD_MS } from '../domain/session';
 import { translate } from '../i18n/translate';
 import type { Locale } from '../i18n/translations';
 import type { ParkingRecord } from '../domain/types';
@@ -35,6 +36,28 @@ async function runSync(records: ParkingRecord[], now: number, locale: Locale): P
       content: {
         title: translate(locale, 'notif.reminder.title'),
         body: translate(locale, 'notif.reminder.body', { count: reminder.count }),
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: new Date(reminder.triggerAt),
+      },
+    });
+  }
+
+  const byId = new Map(records.map((record) => [record.id, record]));
+  for (const reminder of buildSessionReminders(records, now)) {
+    const record = byId.get(reminder.recordId);
+    if (!record) continue;
+    const label = record.note.trim() || translate(locale, 'spot.parked');
+    const isEnd = reminder.kind === 'end';
+    await Notifications.scheduleNotificationAsync({
+      identifier: reminder.id,
+      content: {
+        title: translate(locale, isEnd ? 'notif.session.endTitle' : 'notif.session.title'),
+        body: translate(locale, isEnd ? 'notif.session.endBody' : 'notif.session.body', {
+          note: label,
+          minutes: Math.round(SESSION_WARN_LEAD_MS / 60_000),
+        }),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,

@@ -10,6 +10,7 @@ const rec = (id: string, createdAt: number, collectedAt: number | null): Parking
   createdAt,
   collectedAt,
   expiresAt: createdAt + 1,
+  parkedUntil: null,
 });
 
 test('pickCurrent returns the newest record that has not been collected', () => {

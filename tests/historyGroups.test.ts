@@ -14,6 +14,7 @@ const rec = (id: string, createdAt: number): ParkingRecord => ({
   createdAt,
   collectedAt: createdAt + 1000,
   expiresAt: null,
+  parkedUntil: null,
 });
 
 test('groups records by local calendar day', () => {

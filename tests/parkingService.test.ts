@@ -245,3 +245,30 @@ test('deleteAll removes every row and photo file', async () => {
   expect(await repo.list()).toEqual([]);
   expect(await files.exists(a.photoPath)).toBe(false);
 });
+
+test('capture stores the meter limit', async () => {
+  const { service } = setup(1_000);
+  const rec = await service.capture({ ...shot, parkedUntil: 1_000 + 3_600_000 });
+  expect(rec.parkedUntil).toBe(1_000 + 3_600_000);
+});
+
+test('capture without a limit stores null', async () => {
+  const { service } = setup(1_000);
+  const rec = await service.capture(shot);
+  expect(rec.parkedUntil).toBeNull();
+});
+
+test('endSession clears only the limit', async () => {
+  const { service, repo } = setup(1_000);
+  const rec = await service.capture({ ...shot, parkedUntil: 9_999 });
+  await service.capture({ ...shot, tempUri: 'tmp2.jpg' });
+  await service.endSession(rec.id);
+  const stored = await repo.get(rec.id);
+  expect(stored!.parkedUntil).toBeNull();
+  expect(stored!.expiresAt).not.toBeNull();
+});
+
+test('endSession ignores unknown ids', async () => {
+  const { service } = setup();
+  await expect(service.endSession('missing')).resolves.toBeUndefined();
+});

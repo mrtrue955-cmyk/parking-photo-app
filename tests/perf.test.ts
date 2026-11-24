@@ -16,6 +16,7 @@ function makeRecords(count: number): ParkingRecord[] {
     createdAt: now - i * 3_600_000,
     collectedAt: i % 2 === 0 ? now - i * 3_600_000 + 1_800_000 : null,
     expiresAt: i % 2 === 0 ? now + 20 * 86_400_000 : null,
+    parkedUntil: null,
   }));
 }
 

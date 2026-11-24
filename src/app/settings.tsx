@@ -205,6 +205,23 @@ export default function SettingsScreen() {
         </View>
         <View style={styles.row}>
           <View style={styles.rowText}>
+            <Text>{t('capture.quickSave')}</Text>
+            <Text variant="caption" muted>
+              {t('capture.quickSaveHint')}
+            </Text>
+          </View>
+          <Switch
+            value={settings.quickSave}
+            onValueChange={(next) => {
+              void update({ quickSave: next });
+            }}
+            trackColor={{ true: colors.primary, false: colors.border }}
+            thumbColor={colors.surface}
+            accessibilityLabel={t('capture.quickSave')}
+          />
+        </View>
+        <View style={styles.row}>
+          <View style={styles.rowText}>
             <Text>{t('settings.reminders.geofence')}</Text>
             <Text variant="caption" muted>
               {t('settings.reminders.geofenceBody')}

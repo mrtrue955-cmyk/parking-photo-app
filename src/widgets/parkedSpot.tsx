@@ -19,6 +19,8 @@ export type ParkedSpotProps = {
   ink: string;
   muted: string;
   accent: string;
+  /** Epoch ms of the meter limit; 0 when the driver set none. */
+  timerEnd?: number;
 };
 
 /**
@@ -28,6 +30,10 @@ export type ParkedSpotProps = {
 const ParkedSpot = (props: ParkedSpotProps, environment: WidgetEnvironment) => {
   'widget';
   const family = environment.widgetFamily;
+  // SwiftUI renders `.timer` text by itself, so the countdown stays live without
+  // the app pushing updates to the widget.
+  const timerDate = props.timerEnd ? new Date(props.timerEnd) : null;
+  const showTimer = timerDate !== null && timerDate.getTime() > Date.now();
 
   if (!props.parked) {
     if (family === 'accessoryInline') {
@@ -75,6 +81,13 @@ const ParkedSpot = (props: ParkedSpotProps, environment: WidgetEnvironment) => {
         <Text modifiers={[font({ size: 11, weight: 'medium' }), foregroundStyle(props.muted)]}>
           {props.daysLabel}
         </Text>
+        {showTimer ? (
+          <Text
+            date={timerDate}
+            dateStyle="timer"
+            modifiers={[font({ size: 11, weight: 'semibold' }), foregroundStyle(props.accent)]}
+          />
+        ) : null}
       </VStack>
     );
   }
@@ -98,6 +111,13 @@ const ParkedSpot = (props: ParkedSpotProps, environment: WidgetEnvironment) => {
         {props.spot}
       </Text>
       <Spacer />
+      {showTimer ? (
+        <Text
+          date={timerDate}
+          dateStyle="timer"
+          modifiers={[font({ size: 16, weight: 'bold' }), foregroundStyle(props.accent)]}
+        />
+      ) : null}
       <Text modifiers={[font({ size: 12, weight: 'medium' }), foregroundStyle(props.muted)]}>
         {props.daysLabel}
       </Text>

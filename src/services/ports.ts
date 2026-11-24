@@ -8,6 +8,7 @@ export interface ParkingRepository {
   setCollected(id: string, at: number): Promise<void>;
   setKept(id: string): Promise<void>;
   setExpiresAt(id: string, expiresAt: number | null): Promise<void>;
+  setParkedUntil(id: string, parkedUntil: number | null): Promise<void>;
   updateNote(id: string, note: string): Promise<void>;
   remove(id: string): Promise<void>;
   removeAll(): Promise<void>;

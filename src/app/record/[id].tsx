@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getParkingService, getPhotoFiles } from '../../container';
 import { pickCurrent } from '../../domain/current';
 import { daysLeft } from '../../domain/expiry';
+import { formatSessionRemaining, remainingMs } from '../../domain/session';
 import { historyStatus } from '../../domain/history';
 import { useParking } from '../../hooks/useParking';
 import { useI18n } from '../../i18n';
@@ -32,14 +33,24 @@ export default function RecordDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors } = useTheme();
-  const { t, formatDate } = useI18n();
+  const { t, formatDate, locale } = useI18n();
   const insets = useSafeAreaInsets();
   const { records, loaded, now, refresh } = useParking();
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
+  const [tick, setTick] = useState(() => Date.now());
   const record = records.find((r) => r.id === id);
+  const parkedUntilHint = record?.parkedUntil ?? null;
+
+  // Only while a limit is set and the screen is open: a 30 s tick is enough for a
+  // minute-accurate countdown and costs nothing when the limit is cleared.
+  useEffect(() => {
+    if (parkedUntilHint === null) return;
+    const timer = setInterval(() => setTick(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, [parkedUntilHint]);
 
   if (!loaded) {
     return (
@@ -57,6 +68,7 @@ export default function RecordDetail() {
   }
 
   const recordId = record.id;
+  const parkedUntil = record.parkedUntil;
   const uri = getPhotoFiles().uriFor(record.photoPath);
   const isCurrent = pickCurrent(records)?.id === recordId;
   const status = historyStatus(record.expiresAt, now);
@@ -77,6 +89,20 @@ export default function RecordDetail() {
       } else {
         Alert.alert(t('detail.keepDeniedTitle'), t('detail.keepErrorBody'));
       }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function endSession() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await (await getParkingService()).endSession(recordId);
+      await refresh();
+      successFeedback();
+    } catch {
+      Alert.alert(t('common.errorTitle'), t('common.errorBody'));
     } finally {
       setBusy(false);
     }
@@ -235,6 +261,39 @@ export default function RecordDetail() {
         />
       ) : null}
 
+      {parkedUntil !== null ? (
+        <View
+          style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        >
+          <Text variant="caption" muted>
+            {t('detail.session.title')}
+          </Text>
+          <View style={styles.sessionRow}>
+            <Ionicons name="timer-outline" size={18} color={colors.accent} />
+            <Text variant="heading">
+              {formatSessionRemaining(remainingMs(parkedUntil, tick) ?? 0, locale)}
+            </Text>
+            <Text variant="caption" muted style={styles.sessionUntil}>
+              {t('detail.session.until', {
+                time: new Date(parkedUntil).toLocaleTimeString(
+                  locale === 'vi' ? 'vi-VN' : 'en-US',
+                  {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  },
+                ),
+              })}
+            </Text>
+          </View>
+          <TextButton
+            title={t('detail.session.end')}
+            onPress={endSession}
+            disabled={busy}
+            style={styles.sessionEnd}
+          />
+        </View>
+      ) : null}
+
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Text variant="caption" muted>
           {record.expiresAt === null ? t('detail.keptLabel') : t('detail.expiryLabel')}
@@ -322,6 +381,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  sessionRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sessionUntil: { marginLeft: 'auto' },
+  sessionEnd: { alignSelf: 'flex-start' },
   card: {
     gap: spacing.sm,
     padding: spacing.md,

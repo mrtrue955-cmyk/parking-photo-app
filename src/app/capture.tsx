@@ -29,6 +29,9 @@ import { impactFeedback, successFeedback, tapFeedback } from '../ui/haptics';
 import { useI18n } from '../i18n';
 import type { TranslationKey } from '../i18n/translations';
 import { useSettings } from '../hooks/useSettings';
+import { emitParkingChanged } from '../hooks/parkingEvents';
+import { SESSION_OPTIONS_MIN, sessionEnd } from '../domain/session';
+import { useToast } from '../ui/toast';
 import { useScreenHeaderHeight } from '../ui/components/ScreenHeader';
 import { Text } from '../ui/components/Text';
 import { fontFamilies, radius, spacing } from '../ui/theme';
@@ -57,6 +60,8 @@ export default function CaptureScreen() {
   const [coords, setCoords] = useState<Coords>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
+  const toast = useToast();
   const [suggestionStatus, setSuggestionStatus] = useState<SuggestionStatus>('idle');
   const suggestionRequest = useRef(0);
   const preparedPhoto = useRef<Promise<string> | null>(null);
@@ -133,6 +138,59 @@ export default function CaptureScreen() {
     setPhotoUri(null);
   }
 
+  function sessionLabel(minutes: number): string {
+    return minutes < 60
+      ? t('capture.timer.minutes', { count: minutes })
+      : t('capture.timer.hours', { count: minutes / 60 });
+  }
+
+  function parkedUntilNow(): number | null {
+    return sessionMinutes === null ? null : sessionEnd(Date.now(), sessionMinutes);
+  }
+
+  /** One-tap path: save straight away, fill the note from OCR afterwards, offer undo. */
+  async function quickSave(prepared: Promise<string>, lat: number | null, lng: number | null) {
+    try {
+      const uri = await prepared;
+      const service = await getParkingService();
+      const record = await service.capture({
+        tempUri: uri,
+        lat,
+        lng,
+        note: '',
+        parkedUntil: parkedUntilNow(),
+      });
+      successFeedback();
+      router.back();
+      toast.show({
+        message: t('toast.savedGeneric'),
+        actionLabel: t('toast.undo'),
+        onAction: () => {
+          (async () => {
+            try {
+              await (await getParkingService()).deleteNow(record.id);
+              emitParkingChanged();
+            } catch {
+              Alert.alert(t('toast.undoFailed'), t('common.errorBody'));
+            }
+          })();
+        },
+      });
+      // The note is a second pass: saving must never wait for OCR.
+      suggestNoteFromPhoto(uri, locale, levelStyle, true)
+        .then(async (suggestion) => {
+          if (!suggestion) return;
+          await (await getParkingService()).updateNote(record.id, suggestion);
+          emitParkingChanged();
+        })
+        .catch(() => undefined);
+    } catch {
+      Alert.alert(t('capture.saveErrorTitle'), t('capture.saveErrorBody'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function takePhoto() {
     impactFeedback();
     setBusy(true);
@@ -144,9 +202,14 @@ export default function CaptureScreen() {
       // ~10x smaller than the camera frame and OCR reuses the same file.
       const prepared = preparePhoto(photo.uri);
       preparedPhoto.current = prepared;
+      const resolved = await coordsPromise;
+      if (settings?.quickSave) {
+        await quickSave(prepared, resolved?.lat ?? null, resolved?.lng ?? null);
+        return;
+      }
       setPhotoUri(photo.uri);
       suggestForPhoto(prepared);
-      setCoords(await coordsPromise);
+      setCoords(resolved);
     } catch {
       Alert.alert(t('capture.takeErrorTitle'), t('capture.takeErrorBody'));
     } finally {
@@ -191,6 +254,7 @@ export default function CaptureScreen() {
           lat: coords?.lat ?? null,
           lng: coords?.lng ?? null,
           note,
+          parkedUntil: parkedUntilNow(),
         });
         saved = true;
       } catch {
@@ -295,6 +359,15 @@ export default function CaptureScreen() {
                 {coords ? t('capture.gps.ok') : t('capture.gps.missing')}
               </Text>
             </View>
+
+            {sessionMinutes !== null ? (
+              <View style={styles.gpsRow}>
+                <Ionicons name="timer-outline" size={13} color={colors.accent} />
+                <Text variant="caption" muted>
+                  {t('capture.timer.title')}: {sessionLabel(sessionMinutes)}
+                </Text>
+              </View>
+            ) : null}
 
             {canQuickEdit(note, levelStyle) ? (
               <>
@@ -402,6 +475,58 @@ export default function CaptureScreen() {
           </Text>
         </View>
       </View>
+      <View style={styles.timerBlock}>
+        <Text variant="caption" muted style={styles.timerTitle}>
+          {t('capture.timer.title')}
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.timerChips}
+        >
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: sessionMinutes === null }}
+            onPress={() => setSessionMinutes(null)}
+            style={[
+              styles.timerChip,
+              {
+                backgroundColor: sessionMinutes === null ? colors.primary : colors.surface,
+                borderColor: sessionMinutes === null ? colors.primary : colors.border,
+              },
+            ]}
+          >
+            <Text
+              variant="caption"
+              style={{ color: sessionMinutes === null ? colors.onPrimary : colors.text }}
+            >
+              {t('capture.timer.none')}
+            </Text>
+          </Pressable>
+          {SESSION_OPTIONS_MIN.map((minutes) => {
+            const active = sessionMinutes === minutes;
+            return (
+              <Pressable
+                key={minutes}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                onPress={() => setSessionMinutes(minutes)}
+                style={[
+                  styles.timerChip,
+                  {
+                    backgroundColor: active ? colors.primary : colors.surface,
+                    borderColor: active ? colors.primary : colors.border,
+                  },
+                ]}
+              >
+                <Text variant="caption" style={{ color: active ? colors.onPrimary : colors.text }}>
+                  {sessionLabel(minutes)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
       <View style={[styles.shutterRow, { paddingBottom: spacing.sm + insets.bottom }]}>
         <Pressable
           accessibilityRole="button"
@@ -477,6 +602,15 @@ const styles = StyleSheet.create({
   },
   cameraHintText: { color: '#FFFFFF' },
   shutterRow: { alignItems: 'center', gap: 6 },
+  timerBlock: { gap: 6 },
+  timerTitle: { marginLeft: 2 },
+  timerChips: { gap: 8, paddingRight: 4 },
+  timerChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
   shutterOuter: {
     width: 76,
     height: 76,

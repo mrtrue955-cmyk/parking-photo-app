@@ -18,6 +18,7 @@ const base: ParkingRecord = {
   createdAt: 0,
   collectedAt: null,
   expiresAt: 30 * DAY_MS,
+  parkedUntil: null,
 };
 
 test('computeExpiresAt adds 30 days', () => {

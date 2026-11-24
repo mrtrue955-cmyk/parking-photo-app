@@ -10,6 +10,7 @@ export type ParkedActivityProps = {
   accent: string;
   ink: string;
   muted: string;
+  timerEnd: number | null;
 };
 
 /**
@@ -25,6 +26,8 @@ const ParkedActivity = (props: ParkedActivityProps, environment: LiveActivityEnv
   const accent = environment.isLuminanceReduced
     ? { type: 'hierarchical' as const, style: 'primary' as const }
     : props.accent;
+  const timerDate = props.timerEnd !== null ? new Date(props.timerEnd) : null;
+  const showTimer = timerDate !== null && timerDate.getTime() > Date.now();
 
   return {
     banner: (
@@ -41,6 +44,13 @@ const ParkedActivity = (props: ParkedActivityProps, environment: LiveActivityEnv
         <Text modifiers={[font({ size: 12, weight: 'medium' }), foregroundStyle(secondary)]}>
           {props.startedLabel} · {props.daysLabel}
         </Text>
+        {showTimer ? (
+          <Text
+            date={timerDate}
+            dateStyle="timer"
+            modifiers={[font({ size: 20, weight: 'bold' }), foregroundStyle(accent)]}
+          />
+        ) : null}
       </VStack>
     ),
     compactLeading: <Image systemName="car.fill" color={props.accent} />,
@@ -68,6 +78,13 @@ const ParkedActivity = (props: ParkedActivityProps, environment: LiveActivityEnv
         <Text modifiers={[font({ size: 12 }), foregroundStyle(secondary)]}>
           {props.startedLabel}
         </Text>
+        {showTimer ? (
+          <Text
+            date={timerDate}
+            dateStyle="timer"
+            modifiers={[font({ size: 13, weight: 'bold' }), foregroundStyle(accent)]}
+          />
+        ) : null}
       </HStack>
     ),
   };

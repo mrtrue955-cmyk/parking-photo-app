@@ -38,6 +38,7 @@ export function parkedWidgetProps(
       days === null
         ? translate(locale, 'status.kept')
         : translate(locale, 'spot.daysLeft', { count: days }),
+    timerEnd: record.parkedUntil ?? 0,
   };
 }
 
@@ -49,6 +50,7 @@ export type ParkedActivityView = {
   accent: string;
   ink: string;
   muted: string;
+  timerEnd: number;
 };
 
 /** Returns null when nothing is parked, which is the signal to end the activity. */
@@ -71,5 +73,6 @@ export function parkedActivityProps(
     accent: COLORS.accent,
     ink: COLORS.ink,
     muted: COLORS.muted,
+    timerEnd: record.parkedUntil ?? 0,
   };
 }

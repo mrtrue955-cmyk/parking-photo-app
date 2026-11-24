@@ -4,7 +4,11 @@ import { parkedActivityProps, parkedWidgetProps } from '../src/widgets/props';
 
 const now = 1_000_000_000_000;
 
-const rec = (note: string, expiresAt: number | null): ParkingRecord => ({
+const rec = (
+  note: string,
+  expiresAt: number | null,
+  parkedUntil: number | null = null,
+): ParkingRecord => ({
   id: 'r1',
   photoPath: 'r1.jpg',
   lat: null,
@@ -13,6 +17,7 @@ const rec = (note: string, expiresAt: number | null): ParkingRecord => ({
   createdAt: now - 60_000,
   collectedAt: null,
   expiresAt,
+  parkedUntil,
 });
 
 test('an empty widget invites the user to capture a spot', () => {
@@ -69,4 +74,17 @@ test('the activity follows the app language', () => {
   const props = parkedActivityProps(rec('B2 · Cột 7', now + DAY_MS), now, 'en')!;
   expect(props.startedLabel).toMatch(/^Parked at /);
   expect(props.daysLabel).toBe('1 day left');
+});
+
+test('the meter limit travels to both surfaces', () => {
+  const deadline = now + 42 * 60_000;
+  const spot = parkedWidgetProps(rec('B1 · Cột 45', now + 3 * DAY_MS, deadline), now, 'vi');
+  expect(spot.timerEnd).toBe(deadline);
+  const activity = parkedActivityProps(rec('B1 · Cột 45', now + 3 * DAY_MS, deadline), now, 'vi')!;
+  expect(activity.timerEnd).toBe(deadline);
+});
+
+test('no limit means no timer', () => {
+  expect(parkedWidgetProps(rec('B1 · Cột 45', now + DAY_MS), now, 'vi').timerEnd).toBe(0);
+  expect(parkedActivityProps(rec('B1 · Cột 45', now + DAY_MS), now, 'vi')!.timerEnd).toBe(0);
 });

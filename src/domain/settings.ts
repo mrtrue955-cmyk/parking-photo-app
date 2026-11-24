@@ -17,6 +17,8 @@ export type AppSettings = {
   remindersEnabled: boolean;
   /** Whether the app watches a geofence around the parked spot. */
   geofenceEnabled: boolean;
+  /** Skip the review step and save the moment the shutter fires. */
+  quickSave: boolean;
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -25,6 +27,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   retentionDays: 30,
   remindersEnabled: true,
   geofenceEnabled: false,
+  quickSave: false,
 };
 
 export function isRetentionDays(value: unknown): value is RetentionDays {
@@ -52,5 +55,6 @@ export function parseSettings(raw: unknown): AppSettings {
       typeof value.geofenceEnabled === 'boolean'
         ? value.geofenceEnabled
         : DEFAULT_SETTINGS.geofenceEnabled,
+    quickSave: typeof value.quickSave === 'boolean' ? value.quickSave : DEFAULT_SETTINGS.quickSave,
   };
 }

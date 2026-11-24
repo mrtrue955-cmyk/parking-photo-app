@@ -28,6 +28,9 @@ export class FakeRepo implements ParkingRepository {
   async setExpiresAt(id: string, expiresAt: number | null) {
     this.rows.get(id)!.expiresAt = expiresAt;
   }
+  async setParkedUntil(id: string, parkedUntil: number | null) {
+    this.rows.get(id)!.parkedUntil = parkedUntil;
+  }
   async updateNote(id: string, note: string) {
     this.rows.get(id)!.note = note;
   }

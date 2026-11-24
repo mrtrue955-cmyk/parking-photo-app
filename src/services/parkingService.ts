@@ -18,6 +18,8 @@ export type CaptureInput = {
   lat: number | null;
   lng: number | null;
   note: string;
+  /** Meter or garage limit; null when the driver did not set one. */
+  parkedUntil?: number | null;
 };
 
 export function createParkingService({ repo, files, gallery, settings, now, newId }: Deps) {
@@ -36,6 +38,7 @@ export function createParkingService({ repo, files, gallery, settings, now, newI
         createdAt,
         collectedAt: null,
         expiresAt: computeExpiresAt(createdAt, retentionDays),
+        parkedUntil: input.parkedUntil ?? null,
       };
       let previouslyOpen: ParkingRecord[];
       try {
@@ -86,6 +89,13 @@ export function createParkingService({ repo, files, gallery, settings, now, newI
         }
       }
       return removed;
+    },
+
+    /** Clears the meter limit once the driver is back at the car. */
+    async endSession(id: string): Promise<void> {
+      const record = await repo.get(id);
+      if (!record) return;
+      await repo.setParkedUntil(id, null);
     },
 
     async updateNote(id: string, note: string): Promise<void> {

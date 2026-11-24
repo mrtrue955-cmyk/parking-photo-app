@@ -7,8 +7,8 @@ export function createSqliteRepository(db: SQLiteDatabase): ParkingRepository {
     async insert(r: ParkingRecord) {
       await db.runAsync(
         `INSERT INTO parking_records
-           (id, photoPath, lat, lng, note, createdAt, collectedAt, expiresAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+           (id, photoPath, lat, lng, note, createdAt, collectedAt, expiresAt, parkedUntil)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         r.id,
         r.photoPath,
         r.lat,
@@ -17,6 +17,7 @@ export function createSqliteRepository(db: SQLiteDatabase): ParkingRepository {
         r.createdAt,
         r.collectedAt,
         r.expiresAt,
+        r.parkedUntil,
       );
     },
     list() {
@@ -36,6 +37,9 @@ export function createSqliteRepository(db: SQLiteDatabase): ParkingRepository {
     },
     async setExpiresAt(id: string, expiresAt: number | null) {
       await db.runAsync('UPDATE parking_records SET expiresAt = ? WHERE id = ?', expiresAt, id);
+    },
+    async setParkedUntil(id: string, parkedUntil: number | null) {
+      await db.runAsync('UPDATE parking_records SET parkedUntil = ? WHERE id = ?', parkedUntil, id);
     },
     async updateNote(id: string, note: string) {
       await db.runAsync('UPDATE parking_records SET note = ? WHERE id = ?', note, id);

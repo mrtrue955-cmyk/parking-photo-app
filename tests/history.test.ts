@@ -13,6 +13,7 @@ const rec = (id: string, expiresAt: number | null): ParkingRecord => ({
   createdAt: now - DAY_MS,
   collectedAt: now - DAY_MS / 2,
   expiresAt,
+  parkedUntil: null,
 });
 
 const records = [

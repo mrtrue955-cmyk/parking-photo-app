@@ -17,6 +17,7 @@ const rec = (
   createdAt,
   collectedAt,
   expiresAt: createdAt + 30 * 86_400_000,
+  parkedUntil: null,
 });
 
 const at = (month: number, day: number, hour: number) =>

@@ -7,6 +7,7 @@ import { registerPurgeTask } from '../background/purgeTask';
 import { I18nProvider, useI18n } from '../i18n';
 import '../native/geofence';
 import '../native/notificationSetup';
+import { ToastProvider } from '../ui/toast';
 import { AppErrorBoundary } from '../ui/components/AppErrorBoundary';
 import { ScreenHeader } from '../ui/components/ScreenHeader';
 import { fontAssets } from '../ui/fonts';
@@ -36,8 +37,10 @@ export default function RootLayout() {
 
   return (
     <I18nProvider>
-      <StatusBar style="auto" />
-      <RootStack backgroundColor={colors.background} />
+      <ToastProvider>
+        <StatusBar style="auto" />
+        <RootStack backgroundColor={colors.background} />
+      </ToastProvider>
     </I18nProvider>
   );
 }

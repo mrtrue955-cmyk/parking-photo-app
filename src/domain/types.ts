@@ -7,4 +7,5 @@ export type ParkingRecord = {
   createdAt: number; // epoch ms
   collectedAt: number | null; // null while the car is still parked
   expiresAt: number | null; // null = kept forever
+  parkedUntil: number | null; // meter/garage limit, null = no limit set
 };

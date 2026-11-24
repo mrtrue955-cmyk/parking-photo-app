@@ -19,6 +19,7 @@ const MIGRATIONS = [
       key TEXT PRIMARY KEY NOT NULL,
       value TEXT NOT NULL
     );`,
+  `ALTER TABLE parking_records ADD COLUMN parkedUntil INTEGER;`,
 ];
 
 async function open(): Promise<SQLite.SQLiteDatabase> {
