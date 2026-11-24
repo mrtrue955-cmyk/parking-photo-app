@@ -7,7 +7,7 @@ import type { ParkingRecord } from '../../domain/types';
 import { useI18n } from '../../i18n';
 import { fontFamilies, radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
-import { PrimaryButton, SecondaryButton } from './Button';
+import { PrimaryButton, SecondaryButton, TextButton } from './Button';
 import { Text } from './Text';
 
 type Props = {
@@ -16,10 +16,11 @@ type Props = {
   now: number;
   onOpen: () => void;
   onNavigate: () => void;
+  onFind: () => void;
   onCollect: () => void;
 };
 
-export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect }: Props) {
+export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onFind, onCollect }: Props) {
   const { colors } = useTheme();
   const { t, formatTimeAgo } = useI18n();
   const hasGps = record.lat !== null && record.lng !== null;
@@ -85,13 +86,12 @@ export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect 
         <View style={styles.actions}>
           <SecondaryButton title={t('spot.collect')} onPress={onCollect} style={styles.secondary} />
           {hasGps ? (
-            <PrimaryButton
-              title={t('spot.directions')}
-              onPress={onNavigate}
-              style={styles.primary}
-            />
+            <PrimaryButton title={t('spot.find')} onPress={onFind} style={styles.primary} />
           ) : null}
         </View>
+        {hasGps ? (
+          <TextButton title={t('spot.directions')} onPress={onNavigate} style={styles.directions} />
+        ) : null}
       </View>
     </Animated.View>
   );
@@ -147,4 +147,5 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: spacing.sm },
   secondary: { flex: 1 },
   primary: { flex: 1.4 },
+  directions: { alignSelf: 'center' },
 });

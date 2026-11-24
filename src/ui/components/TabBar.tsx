@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '../../i18n';
 import type { TranslationKey } from '../../i18n/translations';
+import { tapFeedback } from '../haptics';
 import { fontFamilies, radius, spacing } from '../theme';
 import { useTheme } from '../useTheme';
 import { Text } from './Text';
@@ -30,7 +31,7 @@ const TAB_ITEMS = {
 type TabName = keyof typeof TAB_ITEMS;
 
 export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const { t } = useI18n();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -49,7 +50,10 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         target: route!.key,
         canPreventDefault: true,
       });
-      if (!focused && !event.defaultPrevented) navigateToTab(route!.key);
+      if (!focused && !event.defaultPrevented) {
+        tapFeedback();
+        navigateToTab(route!.key);
+      }
     }
 
     return (
@@ -60,11 +64,13 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         onPress={onPress}
         style={styles.tab}
       >
-        <Ionicons
-          name={focused ? item.icon : item.iconOff}
-          size={22}
-          color={focused ? colors.text : colors.textMuted}
-        />
+        <View style={[styles.iconWrap, focused ? { backgroundColor: colors.chip } : null]}>
+          <Ionicons
+            name={focused ? item.icon : item.iconOff}
+            size={20}
+            color={focused ? colors.text : colors.textMuted}
+          />
+        </View>
         <Text
           numberOfLines={1}
           style={[
@@ -86,7 +92,16 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
       pointerEvents="box-none"
       style={[styles.wrap, { bottom: insets.bottom + TAB_BAR_BOTTOM_GAP }]}
     >
-      <View style={[styles.bar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.bar,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+            shadowOpacity: scheme === 'dark' ? 0.45 : 0.1,
+          },
+        ]}
+      >
         {renderTab('index')}
         <Pressable
           accessibilityRole="button"
@@ -127,6 +142,14 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   tab: { width: 84, height: 56, alignItems: 'center', justifyContent: 'center', gap: 3 },
+  iconWrap: {
+    minWidth: 46,
+    height: 26,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   label: { fontSize: 10.5, lineHeight: 14, letterSpacing: 0.1 },
   fab: {
     width: 58,

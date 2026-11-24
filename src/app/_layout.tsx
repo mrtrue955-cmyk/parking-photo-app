@@ -64,6 +64,10 @@ function RootStack({ backgroundColor }: { backgroundColor: string }) {
         options={{ headerShown: true, header: () => <ScreenHeader title={t('settings.title')} /> }}
       />
       <Stack.Screen
+        name="find"
+        options={{ headerShown: true, header: () => <ScreenHeader title={t('find.title')} /> }}
+      />
+      <Stack.Screen
         name="record/[id]"
         options={{ headerShown: true, header: () => <ScreenHeader title={t('detail.title')} /> }}
       />

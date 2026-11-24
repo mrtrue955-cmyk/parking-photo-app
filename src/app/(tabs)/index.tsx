@@ -75,6 +75,7 @@ export default function Home() {
               Alert.alert(t('detail.mapErrorTitle'), t('detail.mapErrorBody')),
             )
           }
+          onFind={() => router.push('/find')}
           onCollect={collect}
         />
       ) : (

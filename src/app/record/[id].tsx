@@ -6,7 +6,9 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   TextInput,
   View,
@@ -17,6 +19,7 @@ import { pickCurrent } from '../../domain/current';
 import { daysLeft } from '../../domain/expiry';
 import { formatSessionRemaining, remainingMs } from '../../domain/session';
 import { historyStatus } from '../../domain/history';
+import { shareMessage } from '../../domain/share';
 import { useParking } from '../../hooks/useParking';
 import { useI18n } from '../../i18n';
 import { directionsUrl } from '../../native/directions';
@@ -93,6 +96,12 @@ export default function RecordDetail() {
       setBusy(false);
     }
   }
+
+  const share = () => {
+    Share.share({ message: shareMessage(record, locale) }).catch(() =>
+      Alert.alert(t('common.errorTitle'), t('common.errorBody')),
+    );
+  };
 
   async function endSession() {
     if (busy) return;
@@ -234,15 +243,23 @@ export default function RecordDetail() {
             >
               {record.note || t('spot.noNote')}
             </Text>
-            <IconButton
-              icon="pencil"
-              size={38}
-              accessibilityLabel={t('detail.editNote')}
-              onPress={() => {
-                setDraft(record.note);
-                setEditing(true);
-              }}
-            />
+            <View style={styles.noteActions}>
+              <IconButton
+                icon="pencil"
+                size={38}
+                accessibilityLabel={t('detail.editNote')}
+                onPress={() => {
+                  setDraft(record.note);
+                  setEditing(true);
+                }}
+              />
+              <IconButton
+                icon="share-outline"
+                size={38}
+                accessibilityLabel={t('detail.share')}
+                onPress={share}
+              />
+            </View>
           </View>
         )}
         <View style={styles.metaRow}>
@@ -254,11 +271,31 @@ export default function RecordDetail() {
       </View>
 
       {hasGps ? (
-        <SpotMap
-          latitude={record.lat!}
-          longitude={record.lng!}
-          title={record.note || t('detail.mapA11y')}
-        />
+        <View style={styles.mapWrap}>
+          <SpotMap
+            latitude={record.lat!}
+            longitude={record.lng!}
+            title={record.note || t('detail.mapA11y')}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('find.title')}
+            onPress={() => router.push('/find')}
+            style={({ pressed }) => [
+              styles.mapCta,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                opacity: pressed ? 0.85 : 1,
+              },
+            ]}
+          >
+            <Ionicons name="navigate" size={14} color={colors.accent} />
+            <Text variant="caption" style={styles.mapCtaLabel}>
+              {t('find.title')}
+            </Text>
+          </Pressable>
+        </View>
       ) : null}
 
       {parkedUntil !== null ? (
@@ -367,6 +404,21 @@ const styles = StyleSheet.create({
   },
   countdownText: { color: '#FFFFFF' },
   headBlock: { gap: 4 },
+  mapWrap: { position: 'relative' },
+  mapCta: {
+    position: 'absolute',
+    right: spacing.sm,
+    bottom: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  mapCtaLabel: { fontFamily: fontFamilies.semibold },
+  noteActions: { flexDirection: 'row', gap: spacing.xs },
   noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   noteText: { flex: 1 },
   editBlock: { gap: spacing.sm },

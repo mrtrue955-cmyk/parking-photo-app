@@ -1,9 +1,11 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { SectionList, StyleSheet, View } from 'react-native';
+import { Pressable, SectionList, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPhotoFiles } from '../../container';
 import { historyOf } from '../../domain/current';
+import { matchesSearch } from '../../domain/search';
 import { filterHistory, type HistoryFilter } from '../../domain/history';
 import { groupHistoryByDay } from '../../domain/historyGroups';
 import { useParking } from '../../hooks/useParking';
@@ -15,7 +17,7 @@ import { HistoryCard } from '../../ui/components/HistoryCard';
 import { SegmentedTabs } from '../../ui/components/SegmentedTabs';
 import { useTabBarSpace } from '../../ui/components/TabBar';
 import { Text } from '../../ui/components/Text';
-import { spacing } from '../../ui/theme';
+import { fontFamilies, radius, spacing } from '../../ui/theme';
 import { useTheme } from '../../ui/useTheme';
 
 const FILTERS: { value: HistoryFilter; labelKey: TranslationKey }[] = [
@@ -38,11 +40,15 @@ export default function History() {
   const bottomSpace = useTabBarSpace();
   const { records, loaded, now } = useParking();
   const [filter, setFilter] = useState<HistoryFilter>('all');
+  const [query, setQuery] = useState('');
   const files = getPhotoFiles();
 
   if (!loaded) return <View style={[styles.fill, { backgroundColor: colors.background }]} />;
 
-  const visible = filterHistory(historyOf(records), filter, now);
+  const searched = query.trim().length > 0;
+  const visible = filterHistory(historyOf(records), filter, now).filter((record) =>
+    matchesSearch(record, query, locale),
+  );
   const sections = groupHistoryByDay(visible, now, locale);
 
   return (
@@ -60,6 +66,34 @@ export default function History() {
             <Text variant="title">{t('history.title')}</Text>
             <TextButton title={t('stats.open')} onPress={() => router.push('/stats')} />
           </View>
+          <View
+            style={[
+              styles.search,
+              { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+            ]}
+          >
+            <Ionicons name="search" size={17} color={colors.textMuted} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t('history.searchPlaceholder')}
+              placeholderTextColor={colors.textMuted}
+              returnKeyType="search"
+              autoCorrect={false}
+              accessibilityLabel={t('history.searchPlaceholder')}
+              style={[styles.searchInput, { color: colors.text }]}
+            />
+            {searched ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('common.cancel')}
+                onPress={() => setQuery('')}
+                hitSlop={8}
+              >
+                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+              </Pressable>
+            ) : null}
+          </View>
           <SegmentedTabs
             options={FILTERS.map((item) => ({ value: item.value, label: t(item.labelKey) }))}
             value={filter}
@@ -67,7 +101,13 @@ export default function History() {
           />
         </View>
       }
-      ListEmptyComponent={<EmptyState icon="time-outline" text={t(EMPTY_KEYS[filter])} />}
+      keyboardShouldPersistTaps="handled"
+      ListEmptyComponent={
+        <EmptyState
+          icon="time-outline"
+          text={searched ? t('history.empty.search') : t(EMPTY_KEYS[filter])}
+        />
+      }
       stickySectionHeadersEnabled
       renderSectionHeader={({ section }) => (
         <Text
@@ -102,4 +142,19 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionHeader: { paddingVertical: spacing.sm, letterSpacing: 0.2 },
   separator: { height: spacing.sm },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    height: 48,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.input,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: fontFamilies.regular,
+    fontSize: 16,
+    paddingVertical: 0,
+  },
 });
