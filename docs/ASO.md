@@ -17,6 +17,19 @@ không lặp lại từ đã có trong tên/phụ đề — Apple đã index cá
 
 ---
 
+## 0. Tên đã chốt
+
+**`ParkPic — Car Photo Finder`** (26/30) — dùng cho storefront tiếng Anh và toàn cầu.
+Storefront tiếng Việt vẫn là **`Cột Xe — Nhớ chỗ đỗ xe`**.
+Tên trên màn hình chính giữ nguyên **Cột Xe**; muốn đổi theo ngôn ngữ thì cần thêm
+`InfoPlist.strings` (chưa làm).
+
+Việc cần làm khi tạo app trên App Store Connect:
+
+1. Primary language: English (U.S.) — đặt tên `ParkPic — Car Photo Finder`.
+2. Thêm localization Vietnamese — đặt tên `Cột Xe — Nhớ chỗ đỗ xe`.
+3. Nếu tên bị báo trùng, thử `PillarPark — Car Finder` (phương án B) trước khi đổi cấu trúc tên.
+
 ## 1. Tên quốc tế
 
 "Cột Xe" là tên hay với người Việt nhưng vô nghĩa với người không nói tiếng Việt.
