@@ -99,3 +99,26 @@ npm install
 npx expo prebuild -p ios     # needs LANG=en_US.UTF-8 on this machine for CocoaPods
 npx expo run:ios
 ```
+
+## Store policy notes
+
+The permission set is deliberately narrower than what Expo ships by default.
+`plugins/withPolicyManifest.js` runs first in `app.json` so it applies last, and
+removes what other plugins add: `SYSTEM_ALERT_WINDOW`, the `READ_MEDIA_*` family,
+`READ_EXTERNAL_STORAGE`, `android:requestLegacyExternalStorage`,
+`NSMotionUsageDescription` and `NSPhotoLibraryUsageDescription` (the app only
+writes one photo, so it uses the add-only permission).
+
+Keep these in sync when adding a feature:
+
+- Background location stays enabled on both platforms for the optional geofence
+  reminder. Play requires the **Location permissions** declaration plus a short
+  screen recording showing the toggle, the system prompt and the notification.
+  App Review needs the same flow written in the review notes.
+- Data safety / App Privacy answers stay "no data collected": photos, notes and
+  coordinates never leave the device. `android:allowBackup` is off so the claim
+  also holds for device backups.
+- No purchase link may be added inside the app while the app is paid upfront.
+  External checkout would break App Store 3.1.1 and Play Payments.
+- The widget extension is generated with `TARGETED_DEVICE_FAMILY = "1,2"` while
+  the app is iPhone-only. Harmless, but set both to `1` if Xcode starts warning.
