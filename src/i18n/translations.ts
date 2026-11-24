@@ -103,6 +103,23 @@ const vi = {
   'find.empty': 'Chưa có vị trí xe để tìm.',
   'find.headingA11y': 'La bàn chỉ hướng tới xe',
 
+  'onboarding.skip': 'Bỏ qua',
+  'onboarding.next': 'Tiếp tục',
+  'onboarding.start': 'Bắt đầu',
+  'onboarding.step1.title': 'Chụp cột xe',
+  'onboarding.step1.body':
+    'Một bức ảnh là đủ. App tự đọc số cột và điền ghi chú giúp bạn, không cần đánh máy.',
+  'onboarding.step2.title': 'Tự xoá sau 30 ngày',
+  'onboarding.step2.body':
+    'Ảnh chỉ để tìm lại xe, không cần giữ mãi. App nhắc bạn một ngày trước khi xoá.',
+  'onboarding.step3.title': 'Tìm lại xe',
+  'onboarding.step3.body':
+    'Khoảng cách và la bàn dẫn bạn về đúng cột. Không phải nhớ tầng, không phải chụp lại.',
+
+  'settings.onboarding.title': 'Giới thiệu',
+  'settings.onboarding.body': 'Xem lại ba bước sử dụng app.',
+  'settings.onboarding.replay': 'Xem lại giới thiệu',
+
   'status.kept': 'Đã giữ lại',
   'status.expiring': 'Sắp hết hạn',
   'status.daysLeft': { one: 'còn {count} ngày', other: 'còn {count} ngày' },
@@ -331,6 +348,23 @@ const en: Record<keyof typeof vi, TranslationValue> = {
   'find.noCompass': 'No compass here, so the arrow shows the absolute bearing.',
   'find.empty': 'No saved spot to find yet.',
   'find.headingA11y': 'Compass pointing at your car',
+
+  'onboarding.skip': 'Skip',
+  'onboarding.next': 'Continue',
+  'onboarding.start': 'Get started',
+  'onboarding.step1.title': 'Snap the pillar',
+  'onboarding.step1.body':
+    'One photo is enough. The app reads the pillar number and fills in the note for you.',
+  'onboarding.step2.title': 'Gone in 30 days',
+  'onboarding.step2.body':
+    'The photo is there to find your car, not to keep forever. We remind you a day before it goes.',
+  'onboarding.step3.title': 'Walk right back',
+  'onboarding.step3.body':
+    'Distance and a compass point at your spot, so you never have to remember the floor.',
+
+  'settings.onboarding.title': 'Intro',
+  'settings.onboarding.body': 'Walk through the three steps again.',
+  'settings.onboarding.replay': 'Replay the intro',
 
   'status.kept': 'Kept',
   'status.expiring': 'Expiring soon',

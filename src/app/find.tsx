@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     width: DIAL - 52,
     height: DIAL - 52,
     borderRadius: (DIAL - 52) / 2,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderStyle: 'dashed',
   },
   direction: { position: 'absolute', fontFamily: fontFamilies.semibold },

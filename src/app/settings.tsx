@@ -238,6 +238,18 @@ export default function SettingsScreen() {
       </View>
 
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Text variant="heading">{t('settings.onboarding.title')}</Text>
+        <Text variant="caption" muted>
+          {t('settings.onboarding.body')}
+        </Text>
+        <TextButton
+          title={t('settings.onboarding.replay')}
+          onPress={() => router.push('/onboarding')}
+          style={styles.replay}
+        />
+      </View>
+
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Text variant="heading">{t('settings.data.title')}</Text>
         <Text variant="caption" muted>
           {t('settings.data.body')}
@@ -272,5 +284,6 @@ const styles = StyleSheet.create({
   },
   rowText: { flex: 1, gap: 2 },
   danger: { alignSelf: 'flex-start', marginTop: spacing.xs },
+  replay: { alignSelf: 'flex-start' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });

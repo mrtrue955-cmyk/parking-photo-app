@@ -19,6 +19,8 @@ export type AppSettings = {
   geofenceEnabled: boolean;
   /** Skip the review step and save the moment the shutter fires. */
   quickSave: boolean;
+  /** Whether the three-step intro has been seen. */
+  onboarded: boolean;
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -28,6 +30,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   remindersEnabled: true,
   geofenceEnabled: false,
   quickSave: false,
+  onboarded: false,
 };
 
 export function isRetentionDays(value: unknown): value is RetentionDays {
@@ -56,5 +59,6 @@ export function parseSettings(raw: unknown): AppSettings {
         ? value.geofenceEnabled
         : DEFAULT_SETTINGS.geofenceEnabled,
     quickSave: typeof value.quickSave === 'boolean' ? value.quickSave : DEFAULT_SETTINGS.quickSave,
+    onboarded: typeof value.onboarded === 'boolean' ? value.onboarded : DEFAULT_SETTINGS.onboarded,
   };
 }
