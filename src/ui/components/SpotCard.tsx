@@ -37,7 +37,13 @@ export function SpotCard({ record, photoUri, now, onOpen, onNavigate, onCollect 
         onPress={onOpen}
       >
         <View>
-          <Image source={{ uri: photoUri }} style={styles.photo} contentFit="cover" />
+          <Image
+            source={{ uri: photoUri }}
+            style={styles.photo}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            recyclingKey={record.id}
+          />
           <View style={styles.topRow}>
             <View style={[styles.statusBadge, { backgroundColor: colors.primary }]}>
               <Text

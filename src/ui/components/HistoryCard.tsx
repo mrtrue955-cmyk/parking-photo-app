@@ -27,7 +27,13 @@ export function HistoryCard({ record, photoUri, now, onPress }: Props) {
         { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 },
       ]}
     >
-      <Image source={{ uri: photoUri }} style={styles.thumb} contentFit="cover" />
+      <Image
+        source={{ uri: photoUri }}
+        style={styles.thumb}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+        recyclingKey={record.id}
+      />
       <View style={styles.body}>
         <Text variant="heading" numberOfLines={1}>
           {title}

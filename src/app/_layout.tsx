@@ -7,6 +7,7 @@ import { registerPurgeTask } from '../background/purgeTask';
 import { I18nProvider, useI18n } from '../i18n';
 import '../native/geofence';
 import '../native/notificationSetup';
+import { AppErrorBoundary } from '../ui/components/AppErrorBoundary';
 import { ScreenHeader } from '../ui/components/ScreenHeader';
 import { fontAssets } from '../ui/fonts';
 import { useTheme } from '../ui/useTheme';
@@ -14,6 +15,9 @@ import { useTheme } from '../ui/useTheme';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export const unstable_settings = { anchor: '(tabs)' };
+
+// Any render error below the root renders this instead of a white screen.
+export const ErrorBoundary = AppErrorBoundary;
 
 export default function RootLayout() {
   const { colors } = useTheme();
