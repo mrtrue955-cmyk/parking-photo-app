@@ -21,13 +21,46 @@ export function useParking() {
   const { locale } = useI18n();
 
   const latestRequest = useRef(0);
+  const inFlight = useRef<Promise<void> | null>(null);
+  const rerun = useRef(false);
+  const lastPurge = useRef(0);
 
-  const refresh = useCallback(async () => {
+  const runSideEffects = useCallback(
+    (list: ParkingRecord[]) => {
+      const current = pickCurrent(list);
+      const stamp = Date.now();
+      syncParkedWidget(parkedWidgetProps(current, stamp, locale));
+      syncParkedActivity(parkedActivityProps(current, stamp, locale));
+      // Notification and geofence work is native round-trips; let the list paint first.
+      setTimeout(() => {
+        (async () => {
+          try {
+            const settings = await (await getParkingService()).getSettings();
+            await syncGeofence(current, settings.geofenceEnabled);
+          } catch (error) {
+            console.warn('Failed to sync the geofence', error);
+          }
+          try {
+            await syncReminders(list, Date.now(), locale);
+          } catch (error) {
+            console.warn('Failed to sync reminders', error);
+          }
+        })();
+      }, 0);
+    },
+    [locale],
+  );
+
+  const load = useCallback(async () => {
     const requestId = ++latestRequest.current;
     let list: ParkingRecord[];
     try {
       const service = await getParkingService();
-      await service.purgeExpired();
+      // Purging stats one file per record; once a minute is plenty for a 30-day window.
+      if (Date.now() - lastPurge.current > 60_000) {
+        lastPurge.current = Date.now();
+        await service.purgeExpired();
+      }
       list = await service.list();
       if (requestId === latestRequest.current) {
         setRecords(list);
@@ -40,22 +73,26 @@ export function useParking() {
       return;
     }
     if (requestId !== latestRequest.current) return;
-    const current = pickCurrent(list);
-    const stamp = Date.now();
-    syncParkedWidget(parkedWidgetProps(current, stamp, locale));
-    syncParkedActivity(parkedActivityProps(current, stamp, locale));
-    try {
-      const settings = await (await getParkingService()).getSettings();
-      await syncGeofence(current, settings.geofenceEnabled);
-    } catch (error) {
-      console.warn('Failed to sync the geofence', error);
+    runSideEffects(list);
+  }, [runSideEffects]);
+
+  const refresh = useCallback(async () => {
+    // Focus, app-active and parking-changed all fire around a save; run one load at a time
+    // and schedule exactly one follow-up instead of stacking three.
+    if (inFlight.current) {
+      rerun.current = true;
+      return inFlight.current;
     }
-    try {
-      await syncReminders(list, Date.now(), locale);
-    } catch (error) {
-      console.warn('Failed to sync reminders', error);
-    }
-  }, [locale]);
+    inFlight.current = (async () => {
+      await load();
+      inFlight.current = null;
+      if (rerun.current) {
+        rerun.current = false;
+        await refresh();
+      }
+    })();
+    return inFlight.current;
+  }, [load]);
 
   useFocusEffect(
     useCallback(() => {

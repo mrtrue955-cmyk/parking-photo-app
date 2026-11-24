@@ -36,14 +36,19 @@ async function prepareImage(photoUri: string): Promise<string> {
  * that hold several lines (Android) are split into single lines. Never rejects: any error, an
  * unsupported device, or a read that takes longer than 5 seconds resolves to [].
  */
-export async function recognizeTextLines(photoUri: string): Promise<string[]> {
+export async function recognizeTextLines(
+  photoUri: string,
+  alreadyPrepared = false,
+): Promise<string[]> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let preparedUri = photoUri;
   try {
     if (!isSupported) return [];
     const result = await Promise.race([
       (async () => {
-        preparedUri = await prepareImage(photoUri);
+        // The capture screen already downscaled the photo once for storage; reuse it
+        // instead of re-encoding the same frame a second time.
+        preparedUri = alreadyPrepared ? photoUri : await prepareImage(photoUri);
         return extractTextFromImage(preparedUri);
       })(),
       new Promise<string[]>((resolve) => {
@@ -59,7 +64,7 @@ export async function recognizeTextLines(photoUri: string): Promise<string[]> {
     return [];
   } finally {
     if (timer !== undefined) clearTimeout(timer);
-    if (preparedUri !== photoUri) {
+    if (!alreadyPrepared && preparedUri !== photoUri) {
       deleteAsync(preparedUri, { idempotent: true }).catch(() => {});
     }
   }

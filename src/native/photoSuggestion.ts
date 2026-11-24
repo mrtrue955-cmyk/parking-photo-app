@@ -11,9 +11,14 @@ export async function suggestNoteFromPhoto(
   photoUri: string,
   locale: Locale = 'vi',
   levelStyle: LevelStyle = 'B',
+  alreadyPrepared = false,
 ): Promise<string | null> {
   try {
-    return suggestLocationNote(await recognizeTextLines(photoUri), locale, levelStyle);
+    return suggestLocationNote(
+      await recognizeTextLines(photoUri, alreadyPrepared),
+      locale,
+      levelStyle,
+    );
   } catch (error) {
     console.warn('Failed to suggest a note from the photo', error);
     return null;

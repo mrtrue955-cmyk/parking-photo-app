@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Image } from 'expo-image';
 import * as Notifications from 'expo-notifications';
@@ -21,6 +21,7 @@ import { getParkingService } from '../container';
 import { levelOptions } from '../domain/levelStyle';
 import { canQuickEdit, parseNote, setLevel, setPillar } from '../domain/noteEditor';
 import { getCoords } from '../native/location';
+import { preparePhoto } from '../native/photoPrep';
 import { suggestNoteFromPhoto } from '../native/photoSuggestion';
 import { ensureNotificationPermission } from '../native/reminders';
 import { PrimaryButton, SecondaryButton } from '../ui/components/Button';
@@ -58,6 +59,7 @@ export default function CaptureScreen() {
   const [busy, setBusy] = useState(false);
   const [suggestionStatus, setSuggestionStatus] = useState<SuggestionStatus>('idle');
   const suggestionRequest = useRef(0);
+  const preparedPhoto = useRef<Promise<string> | null>(null);
   const noteEdited = useRef(false);
 
   if (!permission) {
@@ -96,21 +98,24 @@ export default function CaptureScreen() {
     );
   }
 
-  function suggestForPhoto(uri: string) {
+  function suggestForPhoto(prepared: Promise<string>) {
     // The user already typed a note: skip the read entirely.
     if (noteEdited.current) return;
     const requestId = ++suggestionRequest.current;
     setSuggestionStatus('reading');
-    suggestNoteFromPhoto(uri, locale, levelStyle).then((suggestion) => {
-      // Ignore results for an older photo or after a retake/save.
-      if (requestId !== suggestionRequest.current) return;
-      if (suggestion && !noteEdited.current) {
-        setNote(suggestion);
-        setSuggestionStatus('suggested');
-      } else {
-        setSuggestionStatus('idle');
-      }
-    });
+    prepared
+      .then((uri) => suggestNoteFromPhoto(uri, locale, levelStyle, true))
+      .then((suggestion) => {
+        // Ignore results for an older photo or after a retake/save.
+        if (requestId !== suggestionRequest.current) return;
+        if (suggestion && !noteEdited.current) {
+          setNote(suggestion);
+          setSuggestionStatus('suggested');
+        } else {
+          setSuggestionStatus('idle');
+        }
+      })
+      .catch(() => setSuggestionStatus('idle'));
   }
 
   function retake() {
@@ -135,8 +140,12 @@ export default function CaptureScreen() {
       const coordsPromise = getCoords();
       const photo = await cameraRef.current?.takePictureAsync({ quality: 0.7 });
       if (!photo) return;
+      // Downscale while the review panel is already on screen: the stored file is
+      // ~10x smaller than the camera frame and OCR reuses the same file.
+      const prepared = preparePhoto(photo.uri);
+      preparedPhoto.current = prepared;
       setPhotoUri(photo.uri);
-      suggestForPhoto(photo.uri);
+      suggestForPhoto(prepared);
       setCoords(await coordsPromise);
     } catch {
       Alert.alert(t('capture.takeErrorTitle'), t('capture.takeErrorBody'));
@@ -176,8 +185,9 @@ export default function CaptureScreen() {
     try {
       try {
         const service = await getParkingService();
+        const tempUri = await (preparedPhoto.current ?? Promise.resolve(photoUri));
         await service.capture({
-          tempUri: photoUri,
+          tempUri,
           lat: coords?.lat ?? null,
           lng: coords?.lng ?? null,
           note,
@@ -188,8 +198,12 @@ export default function CaptureScreen() {
       }
       if (saved) {
         successFeedback();
-        await askNotificationOnce().catch(() => undefined);
+        // Leave the capture screen first: the save is done, nothing should hold the
+        // user in a modal while they are walking away from the car.
         router.back();
+        setTimeout(() => {
+          askNotificationOnce().catch(() => undefined);
+        }, 900);
       }
     } finally {
       setBusy(false);
