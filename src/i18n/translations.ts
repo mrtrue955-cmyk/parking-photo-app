@@ -322,7 +322,7 @@ const en: Record<keyof typeof vi, TranslationValue> = {
   'spot.daysLeft': { one: '{count} day left', other: '{count} days left' },
   'spot.parkedFor': 'Parked {ago}',
   'spot.noNote': 'No note',
-  'spot.collect': 'Car collected',
+  'spot.collect': 'Picked up',
   'spot.directions': 'Directions',
   'spot.find': 'Find car',
   'spot.noGps': 'No GPS for this spot',
